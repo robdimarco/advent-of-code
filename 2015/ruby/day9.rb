@@ -9,15 +9,15 @@ London to Belfast = 518
 Dublin to Belfast = 141
 TXT
 
-def distance(routes, start, destinations)
+def distance(routes, start, destinations, type = :min)
   raise 'Doh..no destinations' if destinations.length == 0
   return routes[start][destinations[0]] if destinations.length == 1
 
   distances = destinations.map do |destination|
-    routes[start][destination] + distance(routes, destination, destinations - [destination])
+    routes[start][destination] + distance(routes, destination, destinations - [destination], type)
   end
 
-  distances.min
+  type == :min ? distances.min : distances.max
 end
 
 def load_routes(data)
@@ -40,6 +40,16 @@ def shortest(data)
   end.min
 end
 
+def longest(data)
+  routes = load_routes(data)
+  routes.keys.map do |start|
+    distance(routes, start, routes.keys - [start], :max)
+  end.max
+end
+
 assert_equal(605, shortest(sample))
-puts shortest(data)
+puts "Part 1: #{shortest(data)}"
+
+assert_equal(982, longest(sample))
+puts "Part 2: #{longest(data)}"
 
