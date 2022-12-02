@@ -26,7 +26,11 @@ def amts(buckets, total)
   rv
 end
 
-def score(ingredients_added)
+def score(ingredients_added, required_calories=nil)
+  if required_calories
+    total_calories = ingredients_added.map {|(amt, ingredient)| amt * ingredient[:calories]}.sum
+    return 0 if total_calories != required_calories
+  end
   score = 0
   values = %i(capacity durability flavor texture).map do |t|
     ingredients_added.map do |(amt, ingredient)|
@@ -36,11 +40,11 @@ def score(ingredients_added)
   values.reduce(1) {|acc, v| acc * [v, 0].max}
 end
 
-def highest_score(data)
+def highest_score(data, required_calories=nil)
   ingredients = data.lines.map {|l| parse_line(l)}
   amts = amts(ingredients.size, 100)
   amts.map do |amt|
-    score(amt.zip(ingredients))
+    score(amt.zip(ingredients), required_calories)
   end.max
 end
 assert_equal([[100]], amts(1, 100))
@@ -52,3 +56,8 @@ assert_equal({name: 'Butterscotch', capacity: -1, durability: -2, flavor: 6, tex
 
 assert_equal(62842880, highest_score(sample))
 puts "Part 1: #{highest_score(data)}"
+
+
+assert_equal(57600000 , highest_score(sample, 500))
+puts "Part 2: #{highest_score(data, 500)}"
+
