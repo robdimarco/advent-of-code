@@ -65,8 +65,15 @@ end
 # puts battle(Player.new('player', 100, 4, 0, 8), boss)
 
 winners = []
+losers = []
 10000.times do 
-  winner = battle(gear_up(100), boss)
-  winners <<  winner if winner.name == 'player'
+  player = gear_up(100)
+  winner = battle(player, boss)
+  if winner.name == 'player'
+    winners <<  winner 
+  else
+    losers << player
+  end
 end
-puts winners.sort_by(&:spend).first
+puts "Most efficient: #{winners.sort_by(&:spend).first}"
+puts "Least efficient: #{losers.sort_by(&:spend).last}"
