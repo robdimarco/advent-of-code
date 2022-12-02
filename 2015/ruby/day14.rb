@@ -39,4 +39,20 @@ assert_equal(1056, Reindeer.new(parse("Dancer can fly 16 km/s for 11 seconds, bu
 assert_equal(1120, race(sample, 1_000))
 puts "Part 1: #{race(data, 2503)}"
 
+def points(input, t)
+  reindeer = input.lines.map {|l| Reindeer.new(parse(l))}
+  scores = [0] * reindeer.length
+  (1..t).each do |s|
+    distances = reindeer.map{|r|r.distance(s)}
+    max_d = distances.max
+    distances.each_with_index do |distance, idx|
+      scores[idx] += 1 if distance == max_d
+    end
+  end
+  scores.max
+end
+assert_equal(689, points(sample, 1_000))
+puts "Part 2: #{points(data, 2503)}"
+
+
 
