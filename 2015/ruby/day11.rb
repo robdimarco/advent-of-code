@@ -56,3 +56,4 @@ assert_equal(true, valid_password('ghjaabcc'))
 assert_equal('abcdffaa', increment_password('abcdefgh'))
 # assert_equal('ghjaabcc', increment_password('ghijklmn'))
 puts "part 1 #{increment_password('hxbxwxba')}"
+puts "part 2 #{increment_password(increment_password('hxbxwxba'))}"
