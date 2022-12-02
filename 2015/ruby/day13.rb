@@ -27,19 +27,20 @@ def parse_line(line)
   [a, b, value]
 end
 def combos(input)
-  rv = {}
+  rv = Hash.new do |h,k|
+    h[k] = Hash.new(0)
+  end
   input.lines.map(&:strip).each do |line|
     a, b, value = parse_line(line)
-    rv[a] ||= {}
-    rv[b] ||= {}
     rv[a][b] = value
   end
   rv
 end
 
-def total_change(input)
+def total_change(input, include_me=false)
   combos = combos(input)
   names = combos.keys
+  names += ['***ME***'] if include_me
   names.permutation.map do |order|
     i = -1
     sum = 0
@@ -57,3 +58,4 @@ assert_equal(['Alice', 'Bob', -2], parse_line('Alice would lose 2 happiness unit
 assert_equal(330, total_change(sample))
 
 puts "Part 1: #{total_change(data)}"
+puts "Part 2: #{total_change(data, true)}"
