@@ -38,7 +38,7 @@ def lit_neighbors(start, x, y)
   cnt
 end
 
-def evaluate(start)
+def evaluate(start, corners_on=false)
   rv = []
   start.each_with_index do |row, x|
     rv.push([])
@@ -49,16 +49,20 @@ def evaluate(start)
       else
         cnt == 3 ? 1 : 0
       end
+      if corners_on && [
+        [0,0], [0,row.size - 1], [start.size - 1, 0], [start.size - 1, row.size - 1]
+      ].include?([x,y])
+        new_val = 1
+      end
       rv[-1].push(new_val)
-      # puts "Pushed #{new_val} to #{rv.inspect}"
     end
   end
   rv
 end
 
-def iterate(start, steps)
+def iterate(start, steps, corners_on=false)
   lights = parse(start)
-  steps.times { lights = evaluate(lights)}
+  steps.times { lights = evaluate(lights, corners_on)}
   lights
 end
 
@@ -100,3 +104,6 @@ TXT
 
 puts "Part 1 "
 puts iterate(data, 100).flatten.sum
+
+puts "Part 2"
+puts iterate(data, 100, true).flatten.sum
