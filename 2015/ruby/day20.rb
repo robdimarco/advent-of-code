@@ -42,45 +42,25 @@ assert_equal([1,17], factors(17).sort)
 input = 29_000_000
 
 def presents(house)
-  factors(house).sum * 10
+  @deliveries ||= Hash.new(0)
+  vals, skips = factors(house).partition do |f|
+    @deliveries[f] <= 50
+  end
+  # puts "Skipping #{skips.inspect} for #{n}" if skips.any?
+  vals.each {|n| @deliveries[n] += 1}
+  vals.sum * 11
 end
 
-def house(target, start=nil)
-  n = start || 1
+def house(target)
+  n = 1
   while true
     return n if presents(n) >= target
     n += 1
     print '.' if n % 10_000 == 0
   end
-  # min = 1
-  # max ||= target / 2
-  # bucket = 200_000
-  # while max - min > bucket
-  #   h = min + ((min + max) * rand).to_i
-
-  #   presents_in_bucket = []
-  #   ((-bucket / 2)..bucket/2).each do |b|
-  #     if b + h >= 0
-  #       presents_in_bucket << [b + h, presents(b + h)]
-  #     end
-  #   end
-
-  #   over_target = presents_in_bucket.find {|(n, p)| p >= target}
-
-  #   if over_target
-  #     max = [over_target.first, max].min
-  #   else
-  #     min = [presents_in_bucket.map(&:first).max, min].max
-  #   end
-  #   puts [min, max].join(' ')
-  # end
-
-  # (min..max).find do |n|
-  #   presents(n) >= target
-  # end
 end
 
 assert_equal(1, house(2))
 assert_equal(6, house(100))
 
-puts "Part 1: #{house(29_000_000, 100_000)}"
+puts "Part 1: #{house(29_000_000)}"
