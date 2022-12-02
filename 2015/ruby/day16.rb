@@ -37,7 +37,17 @@ def find_sue(data, ticker_tape)
   sues = data.lines.map {|l| parse_line(l)}
   sues.find do |sue|
     clues.all? do |(clue, cnt)|
-      sue[clue].nil? || sue[clue] == cnt
+      sc = sue[clue]
+      next true if sc.nil?
+
+      case clue
+      when :cats, :trees
+        sc > cnt
+      when :pomeranians, :goldfish
+        sc < cnt
+      else
+        sue[clue] == cnt
+      end
     end
   end
 end
