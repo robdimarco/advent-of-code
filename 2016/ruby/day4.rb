@@ -24,4 +24,21 @@ end
 end
 
 data = File.read('day4.txt')
-puts  data.lines.map {|l| parse_line(l.strip)}.select {|n| real?(n)}.map {|n| n[:sector]}.sum
+real = data.lines.map {|l| parse_line(l.strip)}.select {|n| real?(n)}
+print 'Part 1: '
+puts real.map {|n| n[:sector]}.sum
+
+
+def decrypt(data)
+  data[:name].chars.map do |c|
+    if c == '-'
+      ' '
+    else
+      n = c.ord + (data[:sector] % 26)
+      n = 'a'.ord + n - 'z'.ord - 1 if n > 'z'.ord
+      n.chr
+    end
+  end.join
+end
+assert_equal('very encrypted name', decrypt({name: 'qzmt-zixmtkozy-ivhz', sector: 343}))
+puts real.detect {|n| decrypt(n) == 'northpole object storage'}
