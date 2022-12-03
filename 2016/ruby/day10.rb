@@ -63,6 +63,9 @@ def responsible(instructions, comparison)
   # puts bots
   # puts outputs
   # puts instructions.size
+  puts outputs[0].inspect
+  puts outputs[1].inspect
+  puts outputs[2].inspect
 
   comparisons[comparison]
 end
