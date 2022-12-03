@@ -45,10 +45,10 @@ def parse(data)
   end
 end
 
-def run(data)
+def run(data, registers= Hash.new(0))
   instructions = parse(data)
   position = 0
-  registers = Hash.new(0)
+
   while position < instructions.size do
     instructions, position, registers = execute(instructions, position, registers)
   end
@@ -65,3 +65,6 @@ TEXT
 
 # assert_equal(2, run(sample)['a'])
 puts "Part 1: #{run(data)}"
+r2 = Hash.new(0)
+r2['a'] = 1
+puts "Part 2: #{run(data, r2)}"
