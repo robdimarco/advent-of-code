@@ -10,6 +10,8 @@ end
 Player = Struct.new(:name, :hp, :damage, :mana, :spent, :spells) do
   def player?; name == 'player'; end
   def boss?; !player?; end
+  def alive?; hp > 0; end
+  def dead?; !alive?; end
 
   def buy_spell(val)
     self.mana -= val
@@ -70,10 +72,14 @@ def action(a, b, effects)
 
   boss.hp -= effect_impacts[:damage]
   player.mana += effect_impacts[:mana]
+  if a.player?
+    a.hp -=1
+  end
+  return if a.dead?
 
   if a.player?
     spell = SPELLS.select do |s| 
-      s[:cost] <= a.mana && effects.none? {|e| e.name == s[:name]}
+      s[:cost] <= a.mana && effects.none? {|e| e.active? && e.name == s[:name]}
     end.sample
     # spell = TEST_SPELLS.shift
     # puts "Using spell #{spell}"
@@ -100,8 +106,10 @@ end
 def battle(a, b, effects=[])
   action(a, b, effects)
 
-  if b.hp <= 0
+  if b.dead?
     a
+  elsif a.dead?
+    b
   else 
     effects = effects.select(&:active?)
     battle(b, a, effects)
