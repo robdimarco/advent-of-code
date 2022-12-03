@@ -16,7 +16,7 @@ sample = <<~TEXT
 10
 11
 TEXT
-BUCKETS = 3
+BUCKETS = 4
 require 'set'
 def groupings(data)
   combos = Set.new;
@@ -57,5 +57,5 @@ end
 
 # puts groupings(sample.lines.map(&:to_i)).inspect
 
-assert_equal(99, qe(sample))
+assert_equal(44, qe(sample))
 puts "Part 1: #{qe(data)}"
