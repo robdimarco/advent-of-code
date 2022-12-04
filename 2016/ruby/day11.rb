@@ -5,10 +5,13 @@ data = File.read('day11.txt')
 
 Item = Struct.new(:type, :elem) do
   def to_s
-    [type, elem].join(':')
+    @s ||= [type, elem].join(':')
   end
   def <=>(other)
     [type, elem] <=> [other.type, other.elem]
+  end
+  def pair?(other)
+    elem == other.elem && type != other.type
   end
 end
 
@@ -30,11 +33,18 @@ assert_equal(false, blowup?([Item.new(:chip,:H), Item.new(:gen,:Li), Item.new(:g
 assert_equal(false, blowup?([Item.new(:chip,:H), Item.new(:chip,:Li), Item.new(:gen,:Li), Item.new(:gen,:H)]))
 
 def cache_key(floors, elevator)
-  i = 0
-  "E#{elevator}:" + floors.map do |floor|
-    i+= 1
-    "F#{i}:" + floor.sort.map(&:to_s).join(',')
-  end.join(";")
+  elements = []
+  transformed = floors.map do |f|
+    f.map do |item|
+      idx = elements.index(item.elem)
+      if idx == -1
+        idx = elements.size
+        elements << item.elem
+      end
+      [idx, item.type]
+    end.sort
+  end
+  [elevator, transformed]
 end
 
 def shortest_path(start)
@@ -76,15 +86,21 @@ def check_floor(start, elevator, path, success)
 
   path.unshift(ckey)
   item_combos = ([nil] + start[elevator]).combination(2).to_a.map(&:compact)
+  item_combos.reject! {|items| items.size==2 && !items[0].pair?(items[1])}
 
+  elems, gens = start[elevator].partition {|item| item.type == :elem }
+  paired_elems = elems.select {|i| gens.any? {|g| g.pair?(i)}}
+  if paired_elems.size > 1
+    item_combos.reject {|items| items.size == 2 && items[0].pair?(item[1]) && items[0].elem != paired_elems[0].elem}
+  end
   elevator_moves = if elevator == 0 
     [1]
   elsif elevator == start.size - 1
     [-1]
-  # elsif elevator == 1 && start[0].empty?
-  #   [1]
-  # elsif elevator == 2 && start[1].empty? && start[2].empty?
-  #   [1]
+  elsif elevator == 1 && start[0].empty?
+    [1]
+  elsif elevator == 2 && start[1].empty? && start[0].empty?
+    [1]
   else
     [1, -1]
   end
@@ -116,7 +132,11 @@ DATA = [
     Item.new(:gen, :Ru), 
     Item.new(:chip, :Ru), 
     Item.new(:gen, :Co), 
-    Item.new(:chip, :Co)
+    Item.new(:chip, :Co),
+    Item.new(:gen, :El), 
+    Item.new(:chip, :El),
+    Item.new(:gen, :Dl), 
+    Item.new(:chip, :Dl)
   ],
   [Item.new(:chip, :Po), Item.new(:chip, :Pr)],
   [],
