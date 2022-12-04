@@ -32,5 +32,34 @@ def shortest_path(seed, destination)
   nil
 end
 
+def locations_within_distance(seed, distance)
+  to_check = [[1,1]]
+  within_distance = []
+  checked = {}
+  while to_check.any? do
+    pos = to_check.shift
+
+    next if checked.include?(pos)
+    checked[pos] = true
+
+    sp = shortest_path(seed, pos)
+    if sp <= 50
+      within_distance.push(pos)
+
+      if sp < 50
+        pos_x, pos_y = pos
+        [[1,0], [0, 1], [-1, 0], [0, -1]].each do |(dx, dy)|
+          new_pos = [pos_x + dx, pos_y + dy]
+          next if new_pos[0] < 0 || new_pos[1] < 0 || wall?(seed, new_pos) || checked[new_pos]
+
+          to_check.push(new_pos)
+        end
+      end
+    end
+  end
+  within_distance.size
+end
+
 assert_equal(11, shortest_path(10, [7,4]))
-puts "Part 1: #{shortest_path(1350, [31, 39])}"
+# puts "Part 1: #{shortest_path(1350, [31, 39])}"
+puts "Part 2: #{locations_within_distance(1350, 50)}"
