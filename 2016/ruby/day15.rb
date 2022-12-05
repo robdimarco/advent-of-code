@@ -39,3 +39,4 @@ end
 assert_equal(5, first_time(SAMPLE))
 
 puts "Part 1 #{first_time(DATA)}"
+puts "Part 2 #{first_time(DATA + "Disc #n has 11 positions; at time=0, it is at position 0")}"
