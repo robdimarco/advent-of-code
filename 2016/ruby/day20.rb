@@ -63,5 +63,26 @@ def lowest_allowed(data)
   ranges[-1][1] + 1
 end
 
+def total_allowed(data, target)
+  ranges = data.lines.map {|l| l.scan(/\d+/).map(&:to_i)}.sort
+  ranges = compact_ranges(ranges).sort
+  
+  total = 0
+  i = 1
+  while i < ranges.size
+    _, prev_max = ranges[i-1]
+    min,max = ranges[i]
+    break if max > target
+    total += min - prev_max - 1
+    i += 1
+  end
+
+  total += target - ranges[-1][-1]
+  total
+end
+
 assert_equal(3, lowest_allowed(SAMPLE))
 puts "Part 1: #{lowest_allowed(DATA)}"
+
+assert_equal(2, total_allowed(SAMPLE, 9))
+puts "Part 2: #{total_allowed(DATA, 4294967295)}"
