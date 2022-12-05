@@ -47,3 +47,5 @@ def fill_cksum(length, seed)
 end
 assert_equal("01100", fill_cksum(20, "10000"))
 puts "Part 1: #{fill_cksum(272, "01000100010010111")}"
+puts "Part 2: #{fill_cksum(35651584, "01000100010010111")}"
+
