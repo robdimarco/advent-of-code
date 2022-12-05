@@ -3,12 +3,15 @@ def assert_equal(expected, actual, str="")
 end
 
 require 'digest'
-def password_index(sample, index: 63)
+def password_index(sample, index: 63, rehash: 0)
   i = 0
   pending_confirm = []
   matched = []
   loop do 
     hex = Digest::MD5.hexdigest([sample, i].join)
+    rehash.times do 
+      hex = Digest::MD5.hexdigest(hex)
+    end
 
     pending_confirm = pending_confirm.map do |confirm|
       idx, char, _ = confirm
@@ -43,3 +46,8 @@ assert_equal(39, password_index(sample, index: 0))
 assert_equal(92, password_index(sample, index: 1))
 assert_equal(22728, password_index(sample))
 puts "Part 1: #{password_index(data)}"
+
+assert_equal(10, password_index(sample, index: 0, rehash: 2016))
+# assert_equal(22551, password_index(sample, rehash: 2016))
+
+puts "Part 2: #{password_index(data, rehash: 2016)}"
