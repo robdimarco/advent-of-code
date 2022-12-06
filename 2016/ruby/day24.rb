@@ -73,7 +73,7 @@ def shortest_distance(p1, p2, grid)
   rv
 end
 
-def fewest_steps(data)
+def fewest_steps(data, and_back = false)
   grid, points = parse(data)
 
   point_distances = {}
@@ -84,6 +84,7 @@ def fewest_steps(data)
 
   mins = points.keys.permutation.map do |perm|
     next unless perm[0] == 0
+    perm = perm + [0] if and_back
     d = (1...perm.size).sum do |n|
       key = [perm[n-1], perm[n]].sort
       point_distances[key] 
@@ -96,4 +97,5 @@ def fewest_steps(data)
 end
 
 assert_equal(14, fewest_steps(SAMPLE))
-puts "Part 1: #{fewest_steps(DATA)}"
+# puts "Part 1: #{fewest_steps(DATA)}"
+puts "Part 2: #{fewest_steps(DATA, true)}"
