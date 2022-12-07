@@ -87,9 +87,20 @@ end
 
 def file_size(input)
   dir = parse_input(input)
-  pp dir
+  # pp dir
   dir.all_dirs.select {|d| d.size < 100_000}.sum(&:size)
 end
 
 assert_equal(95437, file_size(SAMPLE))
 puts "Part 1 #{file_size(DATA)}"
+
+def smallest(input)
+  dir = parse_input(input)
+  space = 70000000
+  unused = space - dir.size
+  needed = 30000000 - unused
+  dir.all_dirs.map(&:size).select {|n| n >= needed}.sort.first
+end
+
+assert_equal(24933642, smallest(SAMPLE))
+puts "Part 2 #{smallest(DATA)}"
