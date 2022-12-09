@@ -11,7 +11,7 @@ SAMPLE = <<~TEXT
 5 <-> 6
 6 <-> 4, 5
 TEXT
-def size(data)
+def groups(data)
   nodes = []
   edges = []
   data.lines.map do |l|
@@ -33,8 +33,16 @@ def size(data)
       groups.delete(gb)
     end
   end
-  groups.detect {|g| g.include?(0)}.size
+  groups
+end
+def size(data)
+  groups(data).detect {|g| g.include?(0)}.size
+end
+def count(data)
+  groups(data).size
 end
 
 assert_equal(6, size(SAMPLE))
 puts "Part 1 #{size(DATA)}"
+assert_equal(2, count(SAMPLE))
+puts "Part 2 #{count(DATA)}"
