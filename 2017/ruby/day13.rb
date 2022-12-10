@@ -25,14 +25,6 @@ def severity(data, start_pos = 0)
   end
   penalty
 end
-# n % 4 != 0 && (n+1) % 2 != 0 && (n+4) % 6 != 0 && (n+6) % 6 != 0
-
-# n % 4 != 0
-# n % 2 != 1
-# n % 6 != 4
-# n % 6 != 0
-
-# 4, 2, 0, 0, 6, 0, 6
 
 def fewest(data)
   i = 0
@@ -49,17 +41,10 @@ def fewest(data)
 
     return i if pen.nil?
     i += 1
-    # break if i > 15
   end
 end
-# 1: 2
-# 2: 0, 2, 4
-# 3: 0, 4, 8
-# 4: 0, 6, 12
-# 5: 0, 8, 
 
 assert_equal(24, severity(SAMPLE))
 puts "Part 1 #{severity(DATA)}"
 assert_equal(10, fewest(SAMPLE))
-# assert_equal(10, fewest(SAMPLE.strip + "\n12: 3"))
 puts "Part 2 #{fewest(DATA)}"
