@@ -8,8 +8,9 @@ import (
 )
 
 // InputFileAsString returns the entire contents of the input file as a string.
-func InputFileAsString(inputFilePath string) string {
-	buf, err := os.ReadFile(inputFilePath)
+func InputFileAsString(day string) string {
+	filePath := "../../ruby/" + day + ".txt"
+	buf, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
