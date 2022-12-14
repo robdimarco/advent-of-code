@@ -98,21 +98,3 @@ func TestPart2(t *testing.T) {
 		t.Errorf("expected %d, but got %d", expected, result)
 	}
 }
-
-// func main() {
-// 	dat, err := os.ReadFile("../ruby/day1.txt")
-// 	check(err)
-
-// 	var floor = 0
-// 	// var in_basement = false
-// 	for i := 0; i < len(dat); i++ {
-// 		var c = dat[i]
-// 		if c == '(' {
-// 			floor = floor + 1
-// 		} else if c == ')' {
-// 			floor = floor - 1
-// 		}
-// 		// fmt.Printf("%x ", s[i])
-// 	}
-// 	fmt.Println(floor)
-// }
