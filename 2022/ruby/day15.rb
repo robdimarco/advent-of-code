@@ -126,10 +126,5 @@ def part2(input, max)
   nil
 end
 
-
-# puts intercepts(parse(SAMPLE), 20).uniq.sort.inspect
-# puts intercepts(parse(DATA), 4000000).uniq.sort.inspect
-# puts "Part 1: #{part1(DATA, 1906037)}"
-
 assert_equal(56000011, part2(SAMPLE, 20))
 puts "Part 2: #{part2(DATA, 4000000)}"
