@@ -56,13 +56,7 @@ State = Struct.new(:room, :valves, :time_remaining, :room_hash) do
   end
 
   def next_steps
-    r = room_hash[room]
-    r.destinations
-    # paths = r.paths(room_hash).select do |p|
-    #   missing_valves.find{|v| p.include?(v)}
-    # end
-
-    # paths.map {|p| p[1]}.uniq.compact
+    room_hash[room].destinations
   end
   
   def next_states
@@ -79,7 +73,6 @@ State = Struct.new(:room, :valves, :time_remaining, :room_hash) do
     end
 
     next_states += next_steps.map do |nr|
-      # raise "Invalid room #{nr}" if room_hash[nr].nil? || !room_hash[room].destinations.include?(nr)
       State.new(
         nr, 
         valves, 
@@ -101,10 +94,6 @@ State = Struct.new(:room, :valves, :time_remaining, :room_hash) do
   def unrealized
     return @unrealized if @unrealized
     vals = missing_valves.map {|v| room_hash[v].rate}
-    # sum = 0
-    # vals.sort.reverse.each_with_index do |v, i|
-    #   sum += v * (time_remaining - (2 * i))
-    # end
     @unrealized = vals.sum {|v| v * time_remaining}
   end
 
@@ -146,10 +135,8 @@ def part1(input, time = 30)
     next if state.potential < best_seen
     best_seen = state.actual if state.actual > best_seen
 
-    # require 'debug'; binding.break
     state.next_states.each do |s|
       if s.potential > best
-        # puts "adding pot: #{s.potential} time: #{s.time_remaining}"
         to_check.push(s, [s.potential, s.actual]) 
       end
     end
