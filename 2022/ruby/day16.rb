@@ -20,168 +20,133 @@ Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II
 TEXT
 
-Room = Struct.new(:name, :rate, :destinations) do
-  def valve?
-    rate > 0
+# Have nodes and edges
+Node = Struct.new(:name, :rate)
+# Edge = Struct.new
+def parse(input)
+  re = /Valve ([A-Z]+) has flow rate=(\d+); tunnels? leads? to valves? (.*)/
+  nodes = {}
+  edges = {}
+  input.lines.map do |l|
+    m = re.match(l.strip)
+
+    n = m[1]
+    r = m[2]
+    v = m[3]
+    nodes[n] = Node.new(n, r.to_i)
+    edges[n] = v.split(', ')
   end
+
+  node_to_edges = {}
+  edges.each do |(n, vals)|
+    node_to_edges[nodes[n]] = {}
+    vals.each do |v|
+      binding.break if nodes[v].nil?
+      node_to_edges[nodes[n]][nodes[v]] = 1
+    end
+  end
+  start_node = nodes['AA']
+  [start_node, find_all_paths(node_to_edges, start_node)]
 end
 
-def parse(data)
-  h = data.lines.each_with_object({}) do |line, hsh|
-    tokens = line.split(' ')
-    hsh[tokens[1]] = 
-      Room.new(
-        tokens[1], 
-        tokens[4].scan(/\d+/).first.to_i, 
-        tokens[9..-1].map {|t| t.gsub(',', '')}
-      )
-  end
-  Routes.new(h)
-end
+def find_paths(edges, goal)
+  q = Containers::Queue.new
+  q.push([0, goal])
+  path_lengths = {goal => 0}
+  while !q.empty? do
+    cost, current = q.pop
+    edges[current].each do |(point, point_cost)|
+      if !path_lengths.include?(point) || cost + point_cost < path_lengths[point]
+        path_lengths[point] = cost + point_cost
 
-class Routes
-  attr_reader :rh, :all_paths
-  def initialize(room_hash)
-    @rh = room_hash
-    @all_paths = find_all_paths
-  end
-
-  def shortest_path(from, to, path=[], distances={})
-    return path + [from] if from == to
-    opts = rh[from].destinations.reject {|d| path.include?(d)}
-    opts.map {|d| shortest_path(d, to, path + [from])}.compact.min_by(&:size)
-  end
-
-  def valve_rooms
-    @valve_rooms ||= rh.values.select(&:valve?).map(&:name)
-  end
-
-  def find_all_paths
-    vs = (valve_rooms + ['AA']).uniq
-    vs.each_with_object({}) do |a, hsh|
-      hsh[a] ||= {}
-      vs.each do |b|
-        hsh[b] ||= {}
-        hsh[a][b] = shortest_path(a, b) unless a == b
+        q.push([cost + point_cost, point])
       end
     end
   end
+  path_lengths
 end
 
-State = Struct.new(:room, :valves, :time_remaining, :routes) do
-  def room_hash
-    routes.rh
+def find_all_paths(edges, start_node)
+  costs = {}
+  edges.each do |(node, _)|
+    costs[node] = find_paths(edges, node) if node == start_node || node.rate > 0
   end
-
-  def key
-    [room, valves]
-  end
-
-  def valve_closed?
-    room_hash[room].valve? && valves[room].nil?
-  end
-
-  def next_steps
-    @next_steps ||= routes.all_paths[room].reject {|k, _| valves[p]}
-  end
-  
-  def next_states
-    next_states = []
-    if valve_closed?
-      next_states.push(
-        State.new(
-          room, 
-          valves.merge({room => time_remaining - 1}), 
-          time_remaining - 1, 
-          routes
-        )
-      )
+  rv = {}
+  costs.each do |(node, node_costs)|
+    rv[node] = {}
+    node_costs.each do |(x, c)|
+      rv[node][x] = c if x.rate > 0
     end
-    next_states += next_steps.map do |(nr, path)|
-      State.new(
-        nr, 
-        valves, 
-        time_remaining - path.size + 1, 
-        routes
-      )
-    end.compact
-    next_states
   end
+  rv
+end
 
-  def actual
-    @actual ||= valves.keys.sum {|v| room_hash[v].rate * valves[v]}
+def run_order(costs, start_node, nodes, t)
+  release = 0
+  current = start_node
+  nodes.each do |node|
+    cost = costs[current][node] + 1
+    t -= cost
+    release += t * node.rate
+    current = node
   end
+  release
+end
 
-  def unrealized
-    return @unrealized if @unrealized
-    vals = routes.valve_rooms.map {|v| room_hash[v].rate}
-    @unrealized = vals.sum {|v| v * time_remaining}
-  end
-
-  def potential
-    @potential ||= unrealized + actual
-  end
-
-  def done?
-    time_remaining <= 0 || next_steps.empty?
-  end
-
-  def rate
-    room_hash[room].rate
+def all_orders(distances, node, todo, done, time)
+  Enumerator.new do |y|
+    todo.each do |next_node|
+      # binding.break if distances[node][next_node].nil?
+      cost = distances[node][next_node] + 1
+      if cost < time
+        all_orders(distances, next_node, todo - [next_node], done + [next_node],time - cost).each do |n|
+          y.yield n
+        end
+      end
+    end
+    y.yield done
   end
 end
 
-def run(routes, s)
-  to_check = Containers::PriorityQueue.new
-  to_check.push(s, [s.potential, s.actual])
+def part1(input)
+  start_node, distances = parse(input)
+  working_nodes = distances.keys.select {|n| n.rate > 0}.uniq
+
+  p1_orders = all_orders(distances, start_node, working_nodes, [], 30)
+  best_value = p1_orders.map {|order| run_order(distances, start_node, order, 30)}.max
+  best_value
+end
+
+def part2(input)
+  start_node, distances = parse(input)
+  working_nodes = distances.keys.select {|n| n.rate > 0}.uniq
+
+  p2_orders = all_orders(distances, start_node, working_nodes, [], 26)
+  p2_scores = p2_orders.map do |order|
+    [run_order(distances, start_node, order, 26), order.uniq]
+  end
+  p2_scores.sort_by! {|x| -x[0]}
+  # binding.break
   best = 0
-  best_seen = 0
-  visited = Set.new
-  while !to_check.empty?
-    state = to_check.pop
-    next if visited.include?(state.key)
-    visited.add(state.key)
-    puts "best: #{best} bs: #{best_seen} queue: #{to_check.size} pot: #{state.potential} act: #{state.actual} v: #{visited.size} mv: #{state.next_steps.size}" if visited.size % 10_000 == 0
-    if state.done?
-      if best < state.actual
-        puts "Setting best from #{best} to #{state.actual}" 
-        best = state.actual
-      end
-      next
+  p2_scores.each_with_index do |(sa, oa), i|
+    if sa * 2 < best
+      break
     end
-    return best if best > state.potential
-    next if state.potential < best_seen
-    best_seen = state.actual if state.actual > best_seen
+    p2_scores[i+1..-1].each do |(sb, ob)|
+      # binding.break if sa + sb = 1707
 
-    state.next_states.each do |s|
-      # binding.break
-      to_check.push(s, [s.potential, s.actual]) 
+      if (oa & ob).empty?
+        score = sa + sb
+        if score > best
+          # binding.break
+          best = score
+        end
+      end
     end
   end
-
   best
 end
-
-def part1(input, time = 30)
-  routes = parse(input)
-
-  s = State.new('AA', {}, time, routes)
-  run(routes, s)
-end
-
-# assert_equal(0, part1(SAMPLE, 1))
-# assert_equal(0, part1(SAMPLE, 2))
-# assert_equal(20, part1(SAMPLE, 3))
-# assert_equal(40, part1(SAMPLE, 4))
-# assert_equal(63, part1(SAMPLE, 5))
 # assert_equal(1651, part1(SAMPLE))
-puts "Part 1: #{part1(DATA)}"
-
-# def part2(input, time = 26)
-#   room_hash = parse(input)
-#   s = StatePart2.new('AA', 'AA', {}, time, room_hash)
-#   run(room_hash, s)
-# end
-
+# puts "Part 1: #{part1(DATA)}"
 # assert_equal(1707, part2(SAMPLE))
-# puts "Part 2: #{part2(DATA)}"
+puts "Part 2: #{part2(DATA)}"
