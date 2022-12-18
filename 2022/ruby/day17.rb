@@ -106,7 +106,7 @@ class State
       iters = in_pattern / loop_size
       extra = in_pattern % loop_size
       total = values[last_rocks + extra + 1] + (iters * loop_height)
-      binding.break
+      # binding.break
 
       raise RepeatPatternNotice.new(total) if @raise_on_loop
     end
@@ -127,7 +127,7 @@ class State
     heights = (0..WIDTH).map {|p| current_stack.keys.select {|(x,_)| x == p}.map(&:last).max }
     current_stack.keys.each do |(x,y)|
       h = heights[x]
-      current_stack.delete([x,y]) if h - y > 25
+      current_stack.delete([x,y]) if h - y > 100
     end
   end
 
@@ -182,12 +182,15 @@ assert_equal(3068, part1(SAMPLE))
 # puts "Part 1: #{part1(DATA)}"
 
 
-assert_equal(1514285714288, part1(SAMPLE, limit: 1_000_000_000_000, raise_on_loop: true))
+# assert_equal(1514285714288, part1(SAMPLE, limit: 1_000_000_000_000, raise_on_loop: true))
 # puts "pre-period = #{part1(DATA, limit: 197)}"
 # puts "at 197 + 1739 = #{part1(DATA, limit: 197 + 1739)}"
 # puts "with extra = #{part1(DATA, limit: 197 + 1739 + 211)}"
 
 
 # assert_equal(0, part2(SAMPLE))
-puts "Part 2: #{part1(DATA, limit: 1_000_000_000_000)}"
+# puts "Part 2 10_000: #{part1(DATA, limit: 10_000)}"
+# puts "Part 2 100_000: #{part1(DATA, limit: 100_000)}"
+# puts "Part 2 100_000_000: #{part1(DATA, limit: 100_000_000)}"
+puts "Part 2: #{part1(DATA, limit: 1000000000000)}"
 # 1_577_343_300_745
