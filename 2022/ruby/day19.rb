@@ -105,7 +105,13 @@ class State
           end
           return [State.new(blueprint, turns, robots, new_supply, turn + 1)]
         else
-          rv << State.new(blueprint, turns, new_robots, new_supply, turn + 1)
+          x = robot_count(p.type)
+          y = supply[p.type]
+          t = turns - turn
+          z = blueprint.max_for_type(p.type)
+          if (x * t)+y < t * z
+            rv << State.new(blueprint, turns, new_robots, new_supply, turn + 1)
+          end
         end
       end
     end
@@ -189,7 +195,8 @@ end
 
 # assert_equal(9, part1(SAMPLE1))
 # assert_equal(24, part1(SAMPLE.lines[1]))
-assert_equal(33, part1(SAMPLE))
+# assert_equal(33, part1(SAMPLE))
 # puts "Part 1: #{part1(DATA)}"
 
-assert_equal(56*62, part2(SAMPLE))
+# assert_equal(56*62, part2(SAMPLE))
+puts "Part 2: #{part2(DATA)}"
