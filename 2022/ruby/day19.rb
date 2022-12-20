@@ -46,11 +46,19 @@ class State
     turn == turns
   end
 
-  def potential_qs
+  def potential_max
     (
       supply['geode'] +   
       (robot_count('geode')..(robot_count('geode') + turns - turn)).inject(:+)
-    ) * blueprint.number
+    )
+  end
+
+  def max
+    supply['geode']
+  end
+
+  def potential_quality_score
+    potential_max * blueprint.number
   end
 
   def quality_score
@@ -125,8 +133,16 @@ def parse(data)
 end
 
 def quality_score_for_plan(plan)
+  run_algo(plan, 24, :quality_score)
+end
+
+def max_for_plan(plan)
+  run_algo(plan, 32, :max)
+end
+
+def run_algo(plan, turns, method)
   q = Containers::PriorityQueue.new
-  q.push(State.new(plan), 1)
+  q.push(State.new(plan, turns), 1)
   seen = Set.new
 
   done = []
@@ -136,15 +152,13 @@ def quality_score_for_plan(plan)
     puts "P: #{plan.number} D: #{done.size} q: #{q.size} -> T: #{s.turn} M: #{current_max}" if rand(10_000) == 0
     if s.done?
       done << s
-      # puts [s.supply, s.robots, s.turn].inspect
-      current_max = [current_max, s.quality_score].max
+      current_max = [current_max, s.send(method)].max
       next
     end
 
     next_states = s.run
     next_states.each do |ns|
-    # puts "Breaking on #{ns.inspect}" if ns.potential_qs < current_max
-      unless seen.include?(ns.key) || ns.potential_qs < current_max
+      unless seen.include?(ns.key) || ns.send(:"potential_#{method}") < current_max
         q.push(ns, ns.priority)
         seen.add(ns.key)
       end
@@ -160,26 +174,16 @@ def part1(input)
   end.sum
 end
 
-bp = Blueprint.new(1, [
-  Plan.new('ore', [[4, 'ore']]),
-  Plan.new('clay', [[2, 'ore']]),
-  Plan.new('obsidian', [[3, 'ore'], [14, 'clay']]),
-  Plan.new('geode', [[2, 'ore'], [7, 'obsidian']])
-  ]
-)
-state = State.new(
-  bp, 
-  24, 
-  ['ore', 'clay', 'clay', 'clay', 'clay', 'obsidian', 'obsidian', 'geode', 'geode'],
-  {'ore' => 5, 'clay' => 37, 'obsidian' => 6, 'geode' => 7},
-  4
-)
-#<State:0x0000000106653c70 @blueprint=#<struct Blueprint number=1, plans=[#<struct Plan type="geode", costs=[[2, "ore"], [7, "obsidian"]]>, #<struct Plan type="obsidian", costs=[[3, "ore"], [14, "clay"]]>, #<struct Plan type="clay", costs=[[2, "ore"]]>, #<struct Plan type="ore", costs=[[4, "ore"]]>]>, @turns=24, @robots=["ore", "clay"], @supply={"ore"=>2, "clay"=>1}, @turn=4>
-# pp state.potential_qs
-# pp state.run
-# puts state.inspect
+def part2(input)
+  plans = parse(input)
+  plans[0..2].map do |plan|
+    max_for_plan(plan)
+  end.inject(&:*)
+end
 
 # assert_equal(9, part1(SAMPLE1))
 # assert_equal(24, part1(SAMPLE.lines[1]))
-assert_equal(33, part1(SAMPLE))
+# assert_equal(33, part1(SAMPLE))
 # puts "Part 1: #{part1(DATA)}"
+
+assert_equal(56*62, part2(SAMPLE))
