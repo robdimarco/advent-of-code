@@ -48,7 +48,8 @@ class State
 
   def potential_qs
     (
-      (supply['geode']..(supply['geode'] + turns - turn)).inject(:+)
+      supply['geode'] +   
+      (robot_count('geode')..(robot_count('geode') + turns - turn)).inject(:+)
     ) * blueprint.number
   end
 
@@ -78,18 +79,23 @@ class State
   def run
     return [self] if done?
     rv = [State.new(blueprint, turns, robots, supply.dup, turn + 1)]
+    must_add = nil
     blueprint.plans.each do |p|
-      if p.type != 'geode' && robots.count {|r| r == p.type} >= blueprint.max_for_type(p.type)
-        next
+      if p.type != 'geode' 
+        next if robots.count {|r| r == p.type} >= blueprint.max_for_type(p.type) ||
+          supply[p.type] >= 2*blueprint.max_for_type(p.type)
       end
+
       if p.costs.all? {|(amt, type)| supply[type] >= amt}
         new_robots = robots + [p.type]
         new_supply = supply.dup
         p.costs.each {|(amt,type)| new_supply[type] -= amt}
-        rv << State.new(blueprint, turns, new_robots, new_supply, turn + 1)
-        # break
+        to_check = State.new(blueprint, turns, new_robots, new_supply, turn + 1)
+        must_add = to_check if p.type == 'geocode'
+        rv << to_check
       end
     end
+    rv = [must_add] if must_add
     rv.each do |s|
       robots.each do |r|
         s.supply[r] += 1
@@ -113,7 +119,7 @@ def parse(data)
         [n.to_i, t]
       end
       Plan.new(type, costs)
-    end.compact
+    end.reverse.compact
     Blueprint.new(num, plans)
   end
 end
@@ -122,6 +128,7 @@ def quality_score_for_plan(plan)
   q = Containers::PriorityQueue.new
   q.push(State.new(plan), 1)
   seen = Set.new
+
   done = []
   current_max = 0
   until q.empty? do
@@ -175,4 +182,4 @@ state = State.new(
 # assert_equal(9, part1(SAMPLE1))
 # assert_equal(24, part1(SAMPLE.lines[1]))
 assert_equal(33, part1(SAMPLE))
-puts "Part 1: #{part1(DATA)}"
+# puts "Part 1: #{part1(DATA)}"
