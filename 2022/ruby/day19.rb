@@ -87,7 +87,6 @@ class State
   def run
     return [self] if done?
     rv = [State.new(blueprint, turns, robots, supply.dup, turn + 1)]
-    must_add = nil
     blueprint.plans.each do |p|
       if p.type != 'geode' 
         next if robots.count {|r| r == p.type} >= blueprint.max_for_type(p.type) ||
@@ -98,15 +97,22 @@ class State
         new_robots = robots + [p.type]
         new_supply = supply.dup
         p.costs.each {|(amt,type)| new_supply[type] -= amt}
-        to_check = State.new(blueprint, turns, new_robots, new_supply, turn + 1)
-        must_add = to_check if p.type == 'geocode'
-        rv << to_check
+
+        if p.type == 'geode'
+          new_supply['geode'] += turns - turn - 1 
+          %w(ore clay obsidian).each do |type|
+            new_supply[type] += robot_count(type)
+          end
+          return [State.new(blueprint, turns, robots, new_supply, turn + 1)]
+        else
+          rv << State.new(blueprint, turns, new_robots, new_supply, turn + 1)
+        end
       end
     end
-    rv = [must_add] if must_add
+
     rv.each do |s|
-      robots.each do |r|
-        s.supply[r] += 1
+      %w(ore clay obsidian).each do |type|
+        s.supply[type] += robot_count(type)
       end
     end
 
@@ -183,7 +189,7 @@ end
 
 # assert_equal(9, part1(SAMPLE1))
 # assert_equal(24, part1(SAMPLE.lines[1]))
-# assert_equal(33, part1(SAMPLE))
+assert_equal(33, part1(SAMPLE))
 # puts "Part 1: #{part1(DATA)}"
 
 assert_equal(56*62, part2(SAMPLE))
