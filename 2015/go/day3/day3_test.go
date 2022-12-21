@@ -24,7 +24,7 @@ func TestDeliveryCount(t *testing.T) {
 		elves:    1,
 		expected: 2,
 	}, {
-		val:      ">",
+		val:      "^v",
 		elves:    2,
 		expected: 3,
 	}, {

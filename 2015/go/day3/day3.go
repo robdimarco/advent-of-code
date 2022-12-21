@@ -16,11 +16,12 @@ func DeliveryCount(params Params) int {
 	}
 
 	sets := make([]*hashset.Set, elves)
+	pos := [2]int{0, 0}
 	for i := range sets {
 		sets[i] = hashset.New()
+		sets[i].Add(pos)
 	}
-	pos := [2]int{0, 0}
-	sets[0].Add(pos)
+
 	for i, c := range params.input {
 		dx := 0
 		dy := 0
