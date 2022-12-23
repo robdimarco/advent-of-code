@@ -16,13 +16,15 @@ func DeliveryCount(params Params) int {
 	}
 
 	sets := make([]*hashset.Set, elves)
-	pos := [2]int{0, 0}
+	positions := make(map[int][2]int)
 	for i := range sets {
+		positions[i] = [2]int{0, 0}
 		sets[i] = hashset.New()
-		sets[i].Add(pos)
+		sets[i].Add(positions[i])
 	}
 
 	for i, c := range params.input {
+		idx := (i + 1) % elves
 		dx := 0
 		dy := 0
 		switch c {
@@ -35,13 +37,13 @@ func DeliveryCount(params Params) int {
 		case '>':
 			dx = 1
 		}
-		new_pos := [2]int{pos[0] + dx, pos[1] + dy}
-		sets[(i+1)%elves].Add(new_pos)
-		pos = new_pos
+		new_pos := [2]int{positions[idx][0] + dx, positions[idx][1] + dy}
+		sets[idx].Add(new_pos)
+		positions[idx] = new_pos
 	}
-	sum := 0
+	all := hashset.New()
 	for _, set := range sets {
-		sum += set.Size()
+		all = all.Union(set)
 	}
-	return sum
+	return all.Size()
 }
