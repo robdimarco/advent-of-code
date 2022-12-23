@@ -152,8 +152,19 @@ def part2(input)
 end
 # DIRS = [[1,0], [0,1], [-1,0], [0, -1]]
 def calc(map, pos, dx, dy)
-  sq_size = (map.keys.map(&:first).max + 1)/ 4
+  sq_size = ((map.size / 6) ** 0.5).to_i
+  sqs = map.keys.map {|(x,y)| [x/sq_size, y/sq_size]}.uniq.sort
+  case sqs
+  when [[0, 1], [1, 1], [2, 0], [2, 1], [2, 2], [3, 2]]
+    calc_sample(map, sq_size, pos, dx, dy)
+  when [[0, 2], [0, 3], [1, 0], [1, 1], [1, 2], [2, 0]]
+    calc_data(map, sq_size, pos, dx, dy)
+  else 
+    "Unsupported pattern #{sqs.inspect}"
+  end
+end
 
+def calc_sample(map, sq_size, pos, dx, dy)
   n_dir = nil
   n_pos = nil
   case [pos[0] / sq_size, pos[1] / sq_size]
@@ -236,13 +247,93 @@ def calc(map, pos, dx, dy)
     else
       raise "Unexpected shift at #{pos.inspect} delta: [#{dx}, #{dy}]"
     end
-    # DIRS = [[1,0], [0,1], [-1,0], [0, -1]]
   else
     binding.break
     raise "In weird place #{pos.inspect} #{[pos[0] / sq_size, pos[1] / sq_size].inspect}"
   end
   [n_pos, n_dir]
 end
+
+def calc_data(map, sq_size, pos, dx, dy)
+  case [pos[0] / sq_size, pos[1] / sq_size]
+  when [1, 0]
+    # sq 1
+    if dx == -1
+      n_pos = [0, sq_size*3- pos[1] - 1]
+      n_dir = 0
+    elsif dy == -1
+      n_pos = [0, sq_size*2 + pos[0]]
+      n_dir = 0
+    else 
+      raise "Invalid turn #{pos.inspect} delta #{dx}, #{dy}"
+    end
+  when [2, 0]
+    case [dx, dy]
+    when [0, -1]
+      n_pos = [pos[0] - 2 * sq_size, 4 * sq_size - 1]
+      n_dir = 3
+    when [1, 0]
+      n_pos = [2 * sq_size - 1, 3 * sq_size - pos[1] - 1]
+      n_dir = 2
+    when [0, 1]
+      n_pos = [2 * sq_size - 1, pos[0] - sq_size]
+      n_dir = 2
+    else
+      raise "Invalid turn #{pos.inspect} delta #{dx}, #{dy}"
+    end
+  when [1, 1]
+    if dx == -1
+      n_pos = [pos[1] - sq_size, 2*sq_size]
+      n_dir = 1
+    elsif dx == 1
+      n_pos = [pos[1] + sq_size, sq_size - 1]
+      n_dir = 3
+    else
+      raise "Invalid turn #{pos.inspect} delta #{dx}, #{dy}"
+    end
+  when [0, 2]
+    # sq 4
+    case [dx, dy]
+    when [0, -1]
+      n_pos = [sq_size, pos[0] + sq_size]
+      n_dir = 0
+    when [-1, 0]
+      n_pos = [sq_size, 3 * sq_size - pos[1] - 1]
+      n_dir = 0
+    else
+      raise "Invalid turn #{pos.inspect} delta #{dx}, #{dy}"
+    end
+  when [1, 2]
+    case [dx, dy]
+    when [1, 0]
+      n_pos = [3*sq_size - 1, 3*sq_size - 1 - pos[1]]
+      n_dir = 2
+    when [0, 1]
+      n_pos = [sq_size - 1, 2*sq_size + pos[0]]
+      n_dir = 2
+    else
+      raise "Invalid turn #{pos.inspect} delta #{dx}, #{dy}"
+    end
+  when [0, 3]
+      # sq 6
+    case [dx, dy]
+    when [-1, 0]
+      n_pos = [pos[1] - 2 * sq_size, 0]
+      n_dir = 1
+    when [0, 1]
+      n_pos = [2 * sq_size + pos[0], 0]
+      n_dir = 1
+    when [1, 0]
+      n_pos = [pos[1] - 2*sq_size, 3 * sq_size - 1]
+      n_dir = 3
+    else
+      raise "Invalid turn #{pos.inspect} delta #{dx}, #{dy}"
+    end
+  # DIRS = [[1,0], [0,1], [-1,0], [0, -1]]
+  end
+  [n_pos, n_dir]
+end
+
 map, _, _ = parse(SAMPLE)
 # Sq 1
 assert_equal([[10, 11], 3], calc(map, [10,0], 0, -1))
@@ -285,9 +376,55 @@ assert_equal([[11, 0], 2], calc(map, [15,11], 1, 0))
 assert_equal([[0, 7], 0], calc(map, [12, 11], 0, 1))
 assert_equal([[0, 4], 0], calc(map, [15, 11], 0, 1))
 
+map, _, _ = parse(DATA)
+# Sq 1
+assert_equal([[0, 150], 0], calc(map, [50,0], 0, -1))
+assert_equal([[0, 199], 0], calc(map, [99,0], 0, -1))
 
-# assert_equal(6032, part1(SAMPLE))
-# puts "Part 1: #{part1(DATA)}"
+assert_equal([[0, 149], 0], calc(map, [50,0], -1, 0))
+assert_equal([[0, 100], 0], calc(map, [50,49], -1, 0))
+
+# sq 2
+assert_equal([[0, 199], 3], calc(map, [100, 0], 0, -1))
+assert_equal([[49, 199], 3], calc(map, [149, 0], 0, -1))
+
+assert_equal([[99, 149], 2], calc(map, [149, 0], 1, 0))
+assert_equal([[99, 100], 2], calc(map, [149, 49], 1, 0))
+
+assert_equal([[99, 50], 2], calc(map, [100, 49], 0, 1))
+assert_equal([[99, 99], 2], calc(map, [149, 49], 0, 1))
+
+
+# # sq 3
+assert_equal([[0, 100], 1], calc(map, [50, 50], -1, 0))
+assert_equal([[49, 100], 1], calc(map, [50, 99], -1, 0))
+assert_equal([[100, 49], 3], calc(map, [99, 50], 1, 0))
+assert_equal([[149, 49], 3], calc(map, [99, 99], 1, 0))
+
+# # sq 4
+assert_equal([[50, 49], 0], calc(map, [0, 100], -1, 0))
+assert_equal([[50, 0], 0], calc(map, [0, 149], -1, 0))
+assert_equal([[50, 50], 0], calc(map, [0, 100], 0, -1))
+assert_equal([[50, 99], 0], calc(map, [49, 100], 0, -1))
+
+# # sq 5
+assert_equal([[149, 49], 2], calc(map, [99, 100], 1, 0))
+assert_equal([[149, 0], 2], calc(map, [99, 149], 1, 0))
+assert_equal([[49, 150], 2], calc(map, [50, 149], 0, 1))
+assert_equal([[49, 199], 2], calc(map, [99, 149], 0, 1))
+
+# sq 6
+assert_equal([[50, 0], 1], calc(map, [0, 150], -1, 0))
+assert_equal([[99, 0], 1], calc(map, [0, 199], -1, 0))
+
+assert_equal([[100, 0], 1], calc(map, [0, 199],  0, 1))
+assert_equal([[149, 0], 1], calc(map, [49, 199], 0, 1))
+
+assert_equal([[50, 149], 3], calc(map, [49, 150], 1, 0))
+assert_equal([[99, 149], 3], calc(map, [49, 199], 1, 0))
+
+assert_equal(6032, part1(SAMPLE))
+puts "Part 1: #{part1(DATA)}"
 assert_equal(5031, part2(SAMPLE))
 puts "Part 2: #{part2(DATA)}"
 # # map, _, _ = parse(DATA)
