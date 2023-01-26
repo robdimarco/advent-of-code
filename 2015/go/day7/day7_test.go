@@ -24,6 +24,13 @@ func TestPart1Actual(t *testing.T) {
 		t.Errorf("Part1Actual() mismatch (-want +got):\n%s", diff)
 	}
 }
+func TestPart2Actual(t *testing.T) {
+	got := Part2(utils.InputFileAsLines("day7"))["a"]
+	want := uint16(14134)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Part1Actual() mismatch (-want +got):\n%s", diff)
+	}
+}
 func TestApplyCommand(t *testing.T) {
 
 	want := map[string]uint16{"a": 5}

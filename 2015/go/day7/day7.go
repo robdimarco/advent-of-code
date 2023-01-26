@@ -1,7 +1,6 @@
 package day7
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -10,22 +9,38 @@ func Part1(lines []string) map[string]uint16 {
 	rv := make(map[string]uint16)
 	linesToProcess := make([]string, len(lines))
 	copy(linesToProcess, lines)
-	cnt := 0
 	for {
 		if len(linesToProcess) == 0 {
 			break
 		}
-		fmt.Printf("Got %d lines to go\n", len(linesToProcess))
-		cnt++
+
 		line := linesToProcess[0]
 		linesToProcess = linesToProcess[1:]
 
 		if !ApplyCommand(rv, line) {
 			linesToProcess = append(linesToProcess, line)
 		}
-		// if cnt > 1000 {
-		// 	break
-		// }
+	}
+
+	return rv
+}
+func Part2(lines []string) map[string]uint16 {
+	rv := make(map[string]uint16)
+	linesToProcess := make([]string, len(lines))
+	copy(linesToProcess, lines)
+
+	rv["b"] = Part1(lines)["a"]
+	for {
+		if len(linesToProcess) == 0 {
+			break
+		}
+
+		line := linesToProcess[0]
+		linesToProcess = linesToProcess[1:]
+
+		if !ApplyCommand(rv, line) {
+			linesToProcess = append(linesToProcess, line)
+		}
 	}
 
 	return rv
@@ -35,6 +50,10 @@ func ApplyCommand(hash map[string]uint16, line string) bool {
 	split := strings.Split(line, " -> ")
 	action := split[0]
 	target := split[1]
+	if _, ok := hash[target]; ok {
+		return true
+	}
+
 	if strings.Contains(action, "AND") {
 		split := strings.Split(action, " AND ")
 		val1, ok := GetValue(hash, split[0])
