@@ -57,3 +57,33 @@ func Part1(input []string) int {
 	}
 	return sum
 }
+
+func Part2(input []string) int {
+	grid := make([][]int, 1000)
+	for i := 0; i < 1000; i++ {
+		grid[i] = make([]int, 1000)
+	}
+	for _, instruction := range GetInstructions(input) {
+		for row := instruction.StartPos[0]; row <= instruction.EndPos[0]; row++ {
+			for col := instruction.StartPos[1]; col <= instruction.EndPos[1]; col++ {
+				switch instruction.Cmd {
+				case "on":
+					grid[row][col] += 1
+				case "off":
+					if grid[row][col] > 0 {
+						grid[row][col] -= 1
+					}
+				case "toggle":
+					grid[row][col] += 2
+				}
+			}
+		}
+	}
+	sum := 0
+	for _, row := range grid {
+		for _, val := range row {
+			sum += val
+		}
+	}
+	return sum
+}

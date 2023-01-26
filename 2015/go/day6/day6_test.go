@@ -83,3 +83,12 @@ func TestPart1(t *testing.T) {
 		t.Errorf("Part1() mismatch (-want +got):\n%s", diff)
 	}
 }
+func TestPart2(t *testing.T) {
+	var want, got int
+
+	want = 17836115
+	got = Part2(utils.InputFileAsLines("day6"))
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Part1() mismatch (-want +got):\n%s", diff)
+	}
+}
