@@ -11,6 +11,7 @@ def part1(lines)
   col = (0..lines[0].size).detect {|n| lines[0][n].strip != "" }
   dir = {row: 1, col: 0}
   pos = {row: 0, col: col}
+  steps = 1
 
   rv = ""
   loop do
@@ -46,11 +47,13 @@ def part1(lines)
     elsif n_char =~ /[a-z]/i
       rv = "#{rv}#{n_char}"
       pos = {row: n_row, col: n_col}
+      steps += 1
     else
       pos = {row: n_row, col: n_col}
+      steps += 1
     end
   end
-  rv
+  [rv, steps].join(", ")
 end
 
 puts part1(sample)
