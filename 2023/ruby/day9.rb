@@ -42,10 +42,22 @@ def part1(lines)
 end
 
 def part2(lines)
+  v = parse(lines).map do |l|
+    pyr = pyramid([l])
+    i = pyr.size - 2
+    loop do 
+      break if i == -1
+      pyr[i].unshift(pyr[i].first - pyr[i+1].first)
+      i -= 1
+    end
+    pyr
+  end
+  # puts v.inspect
+  v.map(&:first).map(&:first).sum
 end
 
 puts part1(sample)
 puts part1(real)
 
-# puts part2(sample)
-# puts part2(real)
+puts part2(sample)
+puts part2(real)
