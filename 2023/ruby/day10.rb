@@ -19,6 +19,7 @@ real = File.open("day10.txt").read.lines.map(&:strip)
 def parse(lines)
   lines.map(&:chars)
 end
+
 def start(maze)
   maze.each_with_index do |row, r|
     idx = row.index("S")
@@ -55,61 +56,89 @@ def push_if_valid(to_check, maze, dir, row, col, dist)
     end
   end
 end
+require 'set'
 
-def build_path(lines)
-  maze = parse(lines)
-  st = start(maze)
-  to_check = [[st, 0]]
-  cache = {st => 0}
+def build_path(maze)
+  r, c = start(maze)
+  path = Set.new
+  path.add([r, c])
+
+  pos, dir = [[1, 0], [-1, 0], [0, 1], [0, -1]].map do |dr, dc|
+    rr = r + dr
+    cc = c + dc
+    next if rr < 0 || rr >= maze.size || cc < 0 || cc >= maze[r].size
+    case [dr, dc]
+    when [1, 0]
+      [[rr, cc], :down] if %w(| L J).include?(maze[rr][cc])
+    when [-1, 0]
+      [[rr, cc], :up] if %w(| 7 F).include?(maze[rr][cc])
+    when [0, 1]
+      [[rr, cc], :right] if %w(- J 7).include?(maze[rr][cc])
+    when [0, -1]
+      [[rr, cc], :left] if %w(- F L).include?(maze[rr][cc])
+    end
+  end.compact.first
+
   loop do
-    break if to_check.empty?
-
-    pos, dist = to_check.shift
-
-    next if cache[pos] && cache[pos] < dist
-    
-    row, col = pos
-    next if row < 0 || row >= maze.size || col < 0 || col >= maze[row].size
-
-
-    c = maze[row][col]
-    next if c == '.'
-
-    cache[pos] = dist
-
-    case c
-    when 'S'
-      push_if_valid(to_check, maze, :up, row, col, dist)
-      push_if_valid(to_check, maze, :down, row, col, dist)
-      push_if_valid(to_check, maze, :left, row, col, dist)
-      push_if_valid(to_check, maze, :right, row, col, dist)
-    when '-'
-      push_if_valid(to_check, maze, :left, row, col, dist)
-      push_if_valid(to_check, maze, :right, row, col, dist)
+    break if path.include?(pos)
+    path.add(pos)
+    # puts pos.inspect
+    raise "Bad position #{pos} #{dir}" if pos[0] < 0 || pos[0] >= maze.size || pos[1] < 0 || pos[1] >= maze[0].size
+    r, c = pos
+    case maze[r][c]
     when '|'
-      push_if_valid(to_check, maze, :up, row, col, dist)
-      push_if_valid(to_check, maze, :down, row, col, dist)
+      pos=[r + (dir == :up ? -1 : 1), c]
+    when '-'
+      pos=[r, c + (dir == :left ? -1 : 1)]
     when 'L'
-      push_if_valid(to_check, maze, :up, row, col, dist)
-      push_if_valid(to_check, maze, :right, row, col, dist)
+      case dir
+      when :down
+        pos=[r, c + 1]
+        dir = :right
+      else
+        pos=[r - 1, c]
+        dir = :up
+      end
     when 'J'
-      push_if_valid(to_check, maze, :up, row, col, dist)
-      push_if_valid(to_check, maze, :left, row, col, dist)
+      case dir
+      when :down
+        pos=[r, c - 1]
+        dir = :left
+      else
+        pos=[r - 1, c]
+        dir = :up
+      end
     when '7'
-      push_if_valid(to_check, maze, :down, row, col, dist)
-      push_if_valid(to_check, maze, :left, row, col, dist)
+      case dir
+      when :up
+        pos=[r, c - 1]
+        dir = :left
+      else
+        pos=[r + 1, c]
+        dir = :down
+      end
     when 'F'
-      push_if_valid(to_check, maze, :down, row, col, dist)
-      push_if_valid(to_check, maze, :right, row, col, dist)
+      case dir
+      when :up
+        pos=[r, c + 1]
+        dir = :right
+      else
+        pos=[r + 1, c]
+        dir = :down
+      end
     end
   end
 
-  cache
+
+  path
 end
 
 def part1(lines)
-  build_path(lines).values.max
+  build_path(parse(lines)).size / 2
 end
+puts part1(sample)
+puts part1(sample2)
+puts part1(real)
 
 sample_2a=<<~TXT.lines.map(&:strip)
 ...........
@@ -164,7 +193,7 @@ TXT
 
 def part2(lines)
   maze = parse(lines)
-  path = build_path(lines)
+  path = build_path(maze)
   i = 0
   maze.size.times do |row|
     cnt = 0
@@ -173,7 +202,7 @@ def part2(lines)
       c = maze[row][col]
       if path.include?([row, col])
         cnt += 1 if %w(| J L).include?(c)
-        cnt += 1 if c == "S" && (path[[row - 1, col]] == 1)
+        cnt += 1 if c == "S" && (path.include?([row - 1, col]) == 1)
         next
       end
 
