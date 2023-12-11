@@ -42,7 +42,7 @@ class Part1
     (a[0] - b[0]).abs + (a[1] - b[1]).abs
   end
 
-  def shortest_path(start, destination)
+  def shortest_path(start, destination, base_cost)
     to_check = Containers::PriorityQueue.new
     to_check.push([start, Set.new, 0], -1 * dist(start, destination))
 
@@ -64,8 +64,8 @@ class Part1
 
         new_pos = [rr, cc]
         nc = 1
-        nc += 1 if dr != 0 && empty_rows.include?(rr)
-        nc += 1 if dc != 0 && empty_cols.include?(cc)
+        nc += base_cost if dr != 0 && empty_rows.include?(rr)
+        nc += base_cost if dc != 0 && empty_cols.include?(cc)
 
         if cache[new_pos].nil? || cache[new_pos] > cost + nc
           cache[new_pos] = cost + nc
@@ -91,16 +91,25 @@ end
 def part1(lines)
   p1 = Part1.new(lines)
   p1.points.combination(2).map do |(a, b)|
-    p1.shortest_path(a, b)
+    p1.shortest_path(a, b, 1)
+  end.sum
+end
+
+def part2(lines, cost)
+  p1 = Part1.new(lines)
+  p1.points.combination(2).map do |(a, b)|
+    p1.shortest_path(a, b, cost)
   end.sum
 end
 
 puts part1(sample).inspect
-puts part1(real)
+# puts part1(real)
 
 
 # def part2(lines)
 # end
 
-# puts part2(sample)
+puts part2(sample, 9)
+puts part2(sample, 99)
+puts part2(real, 999_999)
 # puts part2(real)
