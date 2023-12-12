@@ -20,18 +20,20 @@ def strip(pattern)
   pattern
 end
 
-def combos_for_line(args)
+def combos_for_line(args, cache = {})
   # puts "Checking #{args}"
   pattern, arrangement = args
+  return cache[args] if cache[args]
+
   tokens = pattern.split(/\.+/).reject(&:empty?)
   if tokens.empty?
     # puts "no tokens"
-    return 0 
+    return cache[args] = 0 
   end
 
   if tokens.map(&:size) == arrangement
     # puts "full match"
-    return 1 
+    return cache[args] = 1 
   end
 
   t = tokens.first
@@ -39,21 +41,21 @@ def combos_for_line(args)
     # puts "found token #{t}"
     if t.size != arrangement[0]
       # puts "size != arrangement for all #"
-      return 0 
+      return cache[args] = 0 
     end
     pattern = tokens[1..-1].join('.')
     arrangement = arrangement[1..-1]
     if pattern.empty? && arrangement.size > 1
       # puts "pattern empty"
-      return 0 
+      return cache[args] = 0 
     end
     if arrangement.size == 0
       if pattern.index('#').nil?
         # puts "Can all be ."
-        return 1
+        return cache[args] = 1
       else
         # puts "no arrangement, have #"
-        return 0
+        return cache[args] = 0
       end
     end
     # puts "changed arrangement to #{pattern} / #{arrangement}"
@@ -62,10 +64,10 @@ def combos_for_line(args)
   idx = pattern.index('?')
   if idx.nil?
     # puts "No more subs"
-    return 0 
+    return cache[args] = 0 
   end
 
-  combos_for_line([pattern.sub('?', '.'), arrangement]) + combos_for_line([pattern.sub('?', '#'), arrangement])
+  cache[args] = combos_for_line([pattern.sub('?', '.'), arrangement], cache) + combos_for_line([pattern.sub('?', '#'), arrangement], cache)
 end
 
 def parse(lines)
@@ -87,7 +89,9 @@ def part2(lines)
   data = parse(lines)
   data.map do |(a, b)|
     a = ([a] * 5).join("?")
-    combos_for_line([a, b *5])
+    i = combos_for_line([a, b *5])
+    puts "  #{i}"
+    i
   end.sum
 end
 
