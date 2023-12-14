@@ -45,7 +45,6 @@ def tilt_north(data)
       i.times do |n|
         r1 = r - n
         r2 = r - n - 1
-        # puts "Checking [#{r1}, #{c}] against [#{r2}, #{c}]"
         if data[r1][c] == 'O' && data[r2][c] == '.'
           data[r1][c] = '.'
           data[r2][c] = 'O'
@@ -55,17 +54,58 @@ def tilt_north(data)
   end
   data
 end
-# puts tilt_north(parse(real))
+
+def rotate(data)
+  rv = []
+  data[0].size.times { rv.push([] * data.size) }
+  data.each_with_index do |r, col|
+    r.each_with_index do |c, row|
+      rv[row][r.size - col - 1] = c
+    end
+  end
+  rv
+end
+
+def cycle(data, cache)
+  return cache[data] if cache[data]
+  data = tilt_north(data)
+  3.times do 
+    data = tilt_north(rotate(data))
+  end
+  cache[data] = rotate(data)
+end
 
 def part1(lines)
   load(tilt_north(parse(lines)))
 end
 
-def part2(lines)  
+def part2(lines) 
+  cache = {}
+  rotation_cache = {}
+  data = parse(lines)
+  i = 1
+  target = 1_000_000_000
+  loop do
+    data = cycle(data, rotation_cache)
+    key = data.map(&:join).join("\n")
+    if cache[key]
+      # puts "Found repeat at #{i} from #{cache[key]}"
+      left = (target - i) % (i - cache[key])
+      # puts "At #{i} matching #{cache[key]} give #{left} #{cache.inspect}"
+      d = cache.to_a.map(&:reverse).to_h[cache[key] + left]
+
+      return load(parse(d.lines))
+    end
+
+    cache[key] = i
+    i += 1
+  end
+  # puts "Found repeat at #{i}"
+  load(data)
 end
 
-puts part1(sample)
-puts part1(real)
+# puts part1(sample)
+# puts part1(real)
 
 puts part2(sample)
 puts part2(real)
