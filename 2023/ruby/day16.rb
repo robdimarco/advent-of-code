@@ -81,8 +81,11 @@ def apply(data, pos, dir)
 end
 
 def part1(data)
-  # puts data.map(&:join).join("\n")
-  beams = [[[0,0], :right]]
+  run(data, [[0,0], :right])
+end
+
+def run(data, start)
+  beams = [start]
   electified = Set.new()
   i = 0
   until beams.empty? do
@@ -97,12 +100,21 @@ def part1(data)
   electified.map{|a,_| a}.uniq.size
 end
 
-def part2(lines) 
+def part2(data)
+  rv = []
+  data.size.times do |idx|
+    rv.push(run(data, [[idx, 0], :right]))
+    rv.push(run(data, [[idx, data[0].size - 1], :left]))
+  end
+  data[0].size.times do |idx|
+    rv.push(run(data, [[0, idx], :down]))
+    rv.push(run(data, [[data.size - 1, idx], :up]))
+  end
+  rv.max
 end
 
 puts part1(sample)
 puts part1(real)
-
-# puts part2(sample)
-# puts part2(real)
+puts part2(sample)
+puts part2(real)
 
