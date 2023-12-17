@@ -19,7 +19,7 @@ require 'algorithms'
 
 State = Struct.new(:node, :heat) do
   def priority
-    [-heat, -node.steps, -node.r - node.c]
+    [-heat]
   end
 
   def next(dr, dc, heats)
@@ -110,8 +110,9 @@ def part2(data)
   -1
 end
 
-# puts part1(sample)
-# puts part1(real)
+puts part1(sample)
+puts part1(real)
+
 puts part2(sample)
 sample_2=<<~TXT.lines.map(&:strip).map {|l| l.chars.map(&:to_i)}
 111111111111
