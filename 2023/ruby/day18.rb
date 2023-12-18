@@ -33,20 +33,40 @@ end
 
 def graph(instructions)
   pos = [0, 0]
-  rv = {}
+  rv = [pos]
   instructions.each do |ins|
     dr, dc = DirMap[ins.dir]
-    ins.length.times do |i|
-      pos = [pos[0] + dr, pos[1] + dc]
-      rv[pos] = ins.color
-    end
+    length =ins.length
+    new_pos = [pos[0] + dr * length, pos[1] + dc * length]
+    rv.push(pos)
+    pos = new_pos
   end
+  rv.push([0,0])
   rv
 end
 
-def part1(data)
-  inst = parse(data)
-  g = graph(inst)
+DIR_MAP_2 = {
+  '1' => [1, 0],
+  '3' => [-1, 0],
+  '2' => [0, -1],
+  '0' => [0, 1]
+}
+
+def graph_part_2(instructions)
+  pos = [0, 0]
+  rv = [pos]
+  instructions.each do |ins|
+    dr, dc = DIR_MAP_2[ins.color[-1]]
+    length = "0x#{ins.color[1..5]}".to_i(16)
+    new_pos = [pos[0] + dr * length, pos[1] + dc * length]
+    rv.push(pos)
+    pos = new_pos
+  end
+  rv.push([0,0])
+  rv
+end
+
+def run(g)
   rows = g.keys.map { |k| k[0]}
   cols = g.keys.map { |k| k[1]}
 
@@ -101,11 +121,35 @@ def part1(data)
   cnt
 end
 
+def part1(data)
+  inst = parse(data)
+  g = graph(inst)
+  area(g)
+end
+
 def part2(data)
+  inst = parse(data)
+  g = graph_part_2(inst)
+  area(g)
+end
+
+def area(vertices)
+  rv = 0
+  border = 0
+  (1...vertices.size).each do |i|
+    v = vertices[i - 1]
+    v1 = vertices[i]
+    rv += (v[1] + v1[1])*(v[0] - v1[0])
+    border += (v1[0] - v[0] + v1[1] - v[1]).abs
+  end
+
+  ## Inner area + border + origin
+  (rv.abs + border)/ 2 + 1
 end
 
 puts part1(sample)
 puts part1(real)
 
-# puts part2(sample)
-# puts part2(real)
+puts part2(sample)
+puts part2(real)
+ 
