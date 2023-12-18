@@ -22,21 +22,10 @@ State = Struct.new(:node, :heat) do
     [-heat]
   end
 
-  def next(dr, dc, heats)
+  def next(dr, dc, heats, min_steps, max_steps)
     same_dir = node.pr == dr && node.pc == dc
-    return nil if node.steps == 2 && same_dir
-
-    nr = node.r + dr
-    nc = node.c + dc
-    return nil if nr < 0 || nc < 0 || nr >= heats.size || nc >= heats[0].size
-    h = heat + heats[nr][nc]
-    State.new(Node.new(nr, nc, dr, dc, same_dir ? node.steps + 1 : 0), h)
-  end
-
-  def next_ultra(dr, dc, heats)
-    same_dir = node.pr == dr && node.pc == dc
-    return nil if node.steps == 9 && same_dir
-    return nil if node.steps < 3 && !same_dir
+    return nil if node.steps == (max_steps - 2) && same_dir
+    return nil if node.steps < min_steps - 1 && !same_dir
 
     nr = node.r + dr
     nc = node.c + dc
@@ -48,7 +37,7 @@ end
 
 Node = Struct.new(:r, :c, :pr, :pc, :steps)
 
-def part1(data)
+def run(data, min_steps, max_steps)
   max_r = data.size - 1 
   max_c = data[0].size - 1 
   visited = Set.new
@@ -66,10 +55,10 @@ def part1(data)
     state = queue.pop
     next if visited.include?(state.node)
     visited.add(state.node)
-    return state.heat if state.node.r == max_r && state.node.c == max_c
+    return state.heat if state.node.r == max_r && state.node.c == max_c && state.node.steps > (min_steps - 2)
 
     ([[1, 0], [0, 1], [-1, 0], [0, -1]] - [[-state.node.pr, -state.node.pc]]).each do |(dr, dc)|
-      nstate = state.next(dr, dc, data)
+      nstate = state.next(dr, dc, data, min_steps, max_steps)
 
       if nstate && !visited.include?(nstate.node)
         queue.push(nstate, nstate.priority) 
@@ -79,35 +68,12 @@ def part1(data)
   -1
 end
 
+def part1(data)
+  run(data, 1, 4)
+end
+
 def part2(data)
-  max_r = data.size - 1 
-  max_c = data[0].size - 1 
-  visited = Set.new
-  visited.add(Node.new(0, 0, 0, -1, 0))
-  visited.add(Node.new(0, 0, -1, 0, 0))
-  queue = Containers::PriorityQueue.new
-  s = State.new(Node.new(1, 0, 1, 0, 0), data[1][0])
-  queue.push(s, s.priority)
-
-  s = State.new(Node.new(0, 1, 0, 1, 0), data[0][1])
-  queue.push(s, s.priority)
-  last_cost = max_r * max_c * 9
-
-  until queue.empty?
-    state = queue.pop
-    next if visited.include?(state.node)
-    visited.add(state.node)
-    return state.heat if state.node.r == max_r && state.node.c == max_c && state.node.steps > 2
-
-    ([[1, 0], [0, 1], [-1, 0], [0, -1]] - [[-state.node.pr, -state.node.pc]]).each do |(dr, dc)|
-      nstate = state.next_ultra(dr, dc, data)
-
-      if nstate && !visited.include?(nstate.node)
-        queue.push(nstate, nstate.priority) 
-      end
-    end
-  end
-  -1
+  run(data, 4, 10)
 end
 
 puts part1(sample)
