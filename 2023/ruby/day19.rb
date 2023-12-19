@@ -83,15 +83,69 @@ def run(rules, ratings)
   rv
 end
 
+def run_2(rules)
+  to_check = [['in', {x: [1, 4000], m: [1, 4000], a: [1, 4000], s: [1, 4000]}]]
+  rv = 0
+  until to_check.empty? do
+    name, ranges = to_check.shift
+    rule = rules[name]
+    raise "Could not find rule #{name}" if rule.nil?
+    rule.ops.each do |op|
+      vals_to_check = ranges[op.field]
+      case op.op
+      when :<
+          next if vals_to_check[0] > op.compare
+          n = ranges.dup
+          n[op.field] = [vals_to_check[0], op.compare - 1]
+          ranges[op.field] = [op.compare, vals_to_check[1]]
+          case op.target
+          when 'R'
+            # do nothing
+          when 'A'
+            rv += n.values.reduce(1) {|acc, ar| acc * (ar[1] - ar[0] + 1)}
+          else
+            to_check.push([op.target, n])
+          end
+      when :>
+          next if vals_to_check[1] < op.compare
+          n = ranges.dup
+          n[op.field] = [op.compare + 1, vals_to_check[1]]
+          ranges[op.field] = [vals_to_check[0], op.compare]
+          case op.target
+          when 'R'
+            # do nothing
+          when 'A'
+            # puts n.values.inspect
+            rv += n.values.reduce(1) {|acc, ar| acc * (ar[1] - ar[0] + 1)}
+          else
+            to_check.push([op.target, n])
+          end
+      else
+        raise "Need to handle #{op}"
+      end
+    end
+    case rule.default_value
+    when 'R'
+      # Do nothing
+    when 'A'
+      rv += ranges.values.reduce(1) {|acc, ar| acc * (ar[1] - ar[0] + 1)}
+    else
+      to_check.push([rule.default_value, ranges]) unless ranges.values.any? {|v| v[1] - v[0] <= 0}
+    end
+  end
+  rv
+end
+
 def part1(data)
   run(*parse(data))
 end
 
 def part2(data)
+  run_2(parse(data)[0])
 end
 
 puts part1(sample)
 puts part1(real)
 
-# puts part2(sample)
-# puts part2(real)
+puts part2(sample)
+puts part2(real)
