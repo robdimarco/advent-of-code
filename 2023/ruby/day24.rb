@@ -62,11 +62,31 @@ def part1(data, min, max)
 end
 
 def part2(data)
+  require 'z3'
+  lines = parse(data)
+  px = Z3.Int("px")
+  py = Z3.Int("py")
+  pz = Z3.Int("pz")
+  vx = Z3.Int("vx")
+  vy = Z3.Int("vy")
+  vz = Z3.Int("vz")
+  
+  times = (0...lines.size).map {|i| Z3.Int("t#{i}")}
+
+  s = Z3::Solver.new
+  lines.each_with_index do |(pos, v), i|
+      s.assert(px + vx * times[i] == pos[0] + v[0] * times[i])
+      s.assert(py + vy * times[i] == pos[1] + v[1] * times[i])
+      s.assert(pz + vz * times[i] == pos[2] + v[2] * times[i])
+  end
+  s.check
+
+  s.model.model_eval(px + py + pz).to_i
 end
 
 puts part1(sample, 7, 27)
 puts part1(real, 200000000000000, 400000000000000)
 
 
-# puts part2(sample)
-# puts part2(real)
+puts part2(sample)
+puts part2(real)
