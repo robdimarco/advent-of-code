@@ -8,8 +8,12 @@ TEST_DATA =<<~DATA.lines
 DATA
 REAL_DATA = File.read('day1.txt').lines.map(&:strip)
 
+def parse_lists(data)
+  data.map {|n| n.split.map(&:to_i)}.each_with_object([[],[]]) {|n, (a,b)| a<<n[0]; b<<n[1]}.map(&:sort)
+end
+
 def part1(data)
-  a, b = data.map {|n| n.split.map(&:to_i)}.each_with_object([[],[]]) {|n, (a,b)| a<<n[0]; b<<n[1]}.map(&:sort)
+  a, b = parse_lists(data)
   rv = 0
   until a.empty?
     aa = a.shift
@@ -19,5 +23,14 @@ def part1(data)
   rv
 end
 
+def part2(data)
+  a, b = parse_lists(data)  
+  bb = b.each_with_object(Hash.new(0)) {|n, hsh| hsh[n] += 1}
+  a.sum {|aa| aa * bb[aa]}
+end
+
 puts part1(TEST_DATA)
-puts part1(REAL_DATA)
+puts part1(REAL_DATA) 
+
+puts part2(TEST_DATA)
+puts part2(REAL_DATA) 
