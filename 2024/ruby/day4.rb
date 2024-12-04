@@ -42,9 +42,49 @@ def part1(data)
 end
 
 def part2(data)
+  cnt = 0
+  to_check = []
+  (0...data.size - 2).each do |r|
+    (0...data[r].size - 2).each do |c|
+      to_check.push([r, c])
+    end
+  end
+
+  until to_check.empty? do
+    r, c = to_check.pop
+    case data[r][c]
+    when 'M'
+      if data[r + 1][c + 1] == 'A' &&
+        data[r + 2][c] == 'M' &&
+        data[r][c + 2] == 'S' &&
+        data[r + 2][c + 2] == 'S' 
+        cnt += 1
+      end
+      if data[r + 1][c + 1] == 'A' &&
+        data[r][c + 2] == 'M' &&
+        data[r + 2][c] == 'S' &&
+        data[r + 2][c + 2] == 'S' 
+        cnt += 1
+      end
+    when 'S'
+      if data[r + 1][c + 1] == 'A' &&
+        data[r + 2][c] == 'S' &&
+        data[r][c + 2] == 'M' &&
+        data[r + 2][c + 2] == 'M'
+        cnt += 1
+      end
+      if data[r + 1][c + 1] == 'A' &&
+        data[r][c +2] == 'S' &&
+        data[r + 2][c] == 'M' &&
+        data[r + 2][c + 2] == 'M'
+        cnt += 1
+      end
+    end
+  end
+  cnt
 end
 
 puts part1(TEST_DATA)
 puts part1(REAL_DATA)
-# puts part2(TEST_DATA)
-# puts part2(REAL_DATA)
+puts part2(TEST_DATA)
+puts part2(REAL_DATA)
