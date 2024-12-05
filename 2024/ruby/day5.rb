@@ -47,7 +47,6 @@ def valid_update?(rules, update)
   (1...update.size).each do |i|
     (0...i).each do |j|
       if rules.include?([update[i], update[j]])
-        # puts "Bouncing update #{update.inspect} on #{[update[i], update[j]].join('|')}"
         return false 
       end
     end
@@ -67,7 +66,29 @@ def part1(data)
   rv
 end
 
+def reorder(rules, update)
+  update.sort do |a, b|
+    if rules.include?([a,b])
+      -1
+    elsif rules.include?([b,a])
+      1
+    else
+      0
+    end
+  end
+end
+
 def part2(data)
+  rules, updates = parse(data)
+  rv = 0
+  updates.each do |update|
+    if !valid_update?(rules, update)
+      reordered = reorder(rules, update)
+      n = (reordered.size - 1) / 2
+      rv += reordered[n]
+    end
+  end
+  rv
 end
 
 puts part1(TEST_DATA)
