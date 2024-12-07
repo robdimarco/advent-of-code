@@ -20,11 +20,11 @@ def parse(lines)
   end
 end
 
-def valid?(a, b)
-  n = 2 ** (b.size - 1)
+def valid?(a, b, base)
+  n = base ** (b.size - 1)
   return a == b[0] if b.size == 1
   (0...n).each do |i|
-    vals = i.to_s(2).rjust(b.size).reverse.chars.map(&:to_i)
+    vals = i.to_s(base).rjust(b.size).reverse.chars.map(&:to_i)
     n = b[0]
     debug = "#{n}"
     (1...b.size).each do |j|
@@ -32,9 +32,11 @@ def valid?(a, b)
       if op == 0
         n = n + b[j]
         debug += " + #{b[j]}"
-      else
+      elsif op == 1
         n = n * b[j]
         debug += " * #{b[j]}"
+      elsif op == 2
+        n = (n.to_s + b[j].to_s).to_i
       end
     end
     # puts "Got #{n} for #{debug} =? #{a}: #{vals}" 
@@ -44,12 +46,13 @@ def valid?(a, b)
 end
 
 def part1(data)
-  parse(data).select{|a, b| valid?(a, b)}.map{|a,b| a}.sum
+  parse(data).select{|a, b| valid?(a, b, 2)}.map{|a,b| a}.sum
 end
 
 def part2(data)
+  parse(data).select{|a, b| valid?(a, b, 3)}.map{|a,b| a}.sum
 end
 puts part1(TEST_DATA)
-puts part1(REAL_DATA)
-# puts part2(TEST_DATA)
-# puts part2(REAL_DATA)
+# puts part1(REAL_DATA)
+puts part2(TEST_DATA)
+puts part2(REAL_DATA)
