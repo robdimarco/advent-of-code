@@ -60,9 +60,14 @@ def part1(data)
 end
 
 def part2(data)
+  data = parse(data)
+  s = starts(data)
+  s.map do |ss|
+    walk(ss, data).uniq.size
+  end.sum
 end
 
 puts part1(TEST_DATA)
 puts part1(REAL_DATA)
-# puts part2(TEST_DATA)
-# puts part2(REAL_DATA)
+puts part2(TEST_DATA)
+puts part2(REAL_DATA)
