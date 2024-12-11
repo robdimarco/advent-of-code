@@ -2,38 +2,36 @@ TEST_DATA = "125 17".split(" ")
 REAL_DATA = File.read(File.basename(__FILE__, ".rb") + ".txt").split(" ")
 
 def turn(data)
-  rv = []
-  data.each do |n|
+  rv = Hash.new(0)
+  data.each do |n,v|
     if n == "0"
-      rv.push("1")
+      rv["1"] += v
     elsif n.size % 2 == 0
-      n1 = n[0...(n.size/2)]
-      rv.push(n1.to_i.to_s)
-      n1 = n[(n.size/2)..-1]
-      rv.push(n1.to_i.to_s)
+      n1 = n[0...(n.size/2)].to_i.to_s
+      n2 = n[(n.size/2)..-1].to_i.to_s
+      rv[n1] += v
+      rv[n2] += v
     else
-      rv.push((n.to_i * 2024).to_s)
+      rv[(n.to_i * 2024).to_s] += v
     end
   end
   rv
 end
-
-def part1(data)
-  25.times do 
+def parse(data)
+  rv = Hash.new(0)
+  data.each do |n|
+    rv[n] += 1
+  end
+  rv
+end
+def run(data, n)
+  data = parse(data)
+  n.times do
     data = turn(data)
   end
-  data.size
+  data.values.sum
 end
 
-def part2(data)
-  75.times do 
-    print '.'
-    data = turn(data)
-  end
-  data.size
-end
-
-# puts part1(TEST_DATA)
-# puts part1(REAL_DATA)
-# puts part2(TEST_DATA)
-puts part2(REAL_DATA)
+puts run(TEST_DATA, 25)
+puts run(REAL_DATA, 25)
+puts run(REAL_DATA, 75)
