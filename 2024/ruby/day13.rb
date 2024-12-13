@@ -36,47 +36,33 @@ def cost(path)
   path.sum{|n| n == :a ? 3 : 1}
 end
 
-def steps(a, b, prize, pos, path)
-  rv = []
-  bn = b + pos
-
-  if bn.real <= prize.real && bn.imag <= prize.imag
-    rv.push([bn, path + [:b]])
-  end
-
-  if path[-1] != :b
-    an = a + pos
-
-    if an.real <= prize.real && an.imag <= prize.imag
-      rv.push([an, path + [:a]])
-    end
-  end
-  rv
+def solver(a, b, c, d, e, f)
+  a, b, c, d, e, f = [a, b, c, d, e, f].map(&:to_f)
+  x = ((c/a - (b*f/a/e)) / (1 - b*d/a/e))
+  y = f/e - (d*x/e)
+  return [x, y]
 end
 
 def path(a, b, prize)
-  to_check = [[0 + 0i, []]]
-  vals = []
-  loop do 
-    break if to_check.empty?
-    pos, path = to_check.shift
-    # puts "a->#{ path.select{|n|n ==:a}.size} b->#{ path.select{|n|n ==:a}.size}  Looking for #{prize}, at #{pos}"
-    if pos == prize
-      vals.push(cost(path))
-    elsif path.select{|n|n ==:a}.size > 100 || path.select{|n|n ==:b}.size > 100
-      next
-    else
-      to_check += steps(a, b, prize, pos, path)
-    end
-  end
-  vals.min.to_i
+  x, y = solver(a.real, b.real, prize.real, a.imag, b.imag, prize.imag).map(&:round)
+  x * a + y * b == prize ? (x * 3 + y) : 0
 end
 
 def part1(data)
   data = parse(data)
-  # data = data[0...1]
   data.map {|(a,b,prize)| path(a, b, prize)}.sum
 end
 
+def part2(data)
+  data = parse(data)
+  data.each {|r| r[2] += 10000000000000 + 10000000000000i}
+  data.map {|(a,b,prize)| path(a, b, prize)}.sum
+end
+
+# puts solver(94.0, 22.0, 8400.0, 34.0, 67.0, 5400.0).inspect
+# puts solver(94.0, 22.0, 10000000008400.0, 34.0, 67.0, 10000000005400.0).inspect
+# puts solver(26.0, 67.0, 10000000012748.0, 66.0, 21.0, 10000000012176.0).inspect
 puts part1(TEST_DATA)
 puts part1(REAL_DATA)
+puts part2(TEST_DATA)
+puts part2(REAL_DATA)
