@@ -74,25 +74,49 @@ end
 
 def part1(data)
   state, program = parse(data)
-  # puts state.inspect
-  # puts program.inspect
   output, state = run(state, program)
-  # puts state.inspect
+
   output.join(",")
 end
-# If register C contains 9, the program 2,6 would set register B to 1.
-# output = []
-# state = {c:9}
-# run(state, [2,6])
-# puts [output, state].inspect
-# output = []; state = {a: 10}
-# puts run(state, [5,0,5,1,5,4]).inspect
-# puts run({a: 2024}, [0,1,5,4,3,0]).inspect
-# puts run({b: 29}, [1,7]).inspect
-# puts run({b: 2024, c: 43690}, [4,0]).inspect
-# If register A contains 10, the program 5,0,5,1,5,4 would output 0,1,2.
-# If register A contains 2024, the program 0,1,5,4,3,0 would output 4,2,5,6,7,7,7,7,3,1,0 and leave 0 in register A.
-# If register B contains 29, the program 1,7 would set register B to 26.
-# If register B contains 2024 and register C contains 43690, the program 4,0 would set register B to 44354.
-puts part1(TEST_DATA)
-puts part1(REAL_DATA)
+
+
+
+def part2(data)
+  state, program = parse(data)
+  run(state.merge(a: (117440 )), program).inspect
+  to_check = (0...8).map { |n| [n] }
+  possibles = []
+  puts "Trying to match #{program}"
+  while to_check.any? do
+    vals = to_check.shift
+    val = 0
+    vals.each_with_index do |v, idx|
+      val += v << (3 * idx)
+    end
+
+    nstate = state.merge({:a => val})
+    # puts "Checking #{val} from #{nstate.inspect}"
+    o, _ = run(nstate, program)
+    # puts "Checking #{val} => #{o.inspect} from #{nstate.inspect}"
+    if o == program
+      # puts "Possible: #{val}"
+      possibles.push(val)
+    elsif o.last(vals.size) == program.last(vals.size)
+      # puts "Matched #{val} #{o.inspect} #{vals.size}"
+      (0...8).each do |nn|
+        to_check.push([nn] + vals)
+      end
+    end
+  end
+  [possibles.min, possibles.size].inspect
+end
+
+TEST_DATA_2 = <<~DATA
+Register A: 2024
+Register B: 0
+Register C: 0
+
+Program: 0,3,5,4,3,0
+DATA
+puts part2(TEST_DATA_2)
+puts part2(REAL_DATA)
