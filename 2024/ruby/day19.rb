@@ -11,8 +11,6 @@ brgr
 bbrgwb
 DATA
 REAL_DATA = File.read(File.basename(__FILE__, ".rb") + ".txt")
-require 'algorithms'
-require 'set'
 def parse(data)
   lines = data.lines
   towels = lines.shift.strip.split(', ')
@@ -34,14 +32,10 @@ def solutions(towels, pattern, cache)
   cache[pattern] = rv
 end
 
-def match?(towels, pattern, cache)
-  solutions(towels, pattern, cache).positive?
-end
-
 def part1(data)
   towels, patterns = parse(data)
   cache = {}
-  patterns.select { |pattern| match?(towels, pattern, cache)}.size
+  patterns.select { |pattern| solutions(towels, pattern, cache).positive?}.size
 end
 
 def part2(data)
