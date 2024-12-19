@@ -27,7 +27,6 @@ def solutions(towels, pattern, cache):
     elif pattern.startswith(t):
       rv += solutions(towels, pattern[len(t):], cache)
   cache[pattern] = rv
-  print(".", end="")
   return rv
 
 def part2(data):
