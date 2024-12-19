@@ -29,9 +29,7 @@ def match?(towels, pattern)
     towel, rem = to_check.pop
     next if checked.include?([towel, rem])
     checked.add([towel, rem])
-    # puts "Checking #{towel} against #{rem}"
     if towel == rem
-      # print 'X'
       return true 
     end
     if rem.start_with?(towel)
@@ -40,13 +38,33 @@ def match?(towels, pattern)
       end
     end
   end
-  # print '?'
   false
+end
+
+def solutions(towels, pattern, cache)
+  return cache[pattern] if cache[pattern]
+  rv = 0
+  towels.each do |t|
+    if t == pattern
+      rv += 1
+    elsif pattern.start_with?(t)
+      rv += solutions(towels, pattern[t.size..-1], cache)
+    end
+  end
+  cache[pattern] = rv
 end
 
 def part1(data)
   towels, patterns = parse(data)
   patterns.select { |pattern| match?(towels, pattern)}.size
 end
-# puts part1(TEST_DATA)
+
+def part2(data)
+  towels, patterns = parse(data)
+  cache = {}
+  patterns.map { |pattern| solutions(towels, pattern, cache)}.sum
+end
+puts part1(TEST_DATA)
 puts part1(REAL_DATA)
+puts part2(TEST_DATA)
+puts part2(REAL_DATA)
