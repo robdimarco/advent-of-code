@@ -29,6 +29,12 @@ def solutions(towels, pattern, cache):
   cache[pattern] = rv
   return rv
 
+
+def part1(data):
+  towels, patterns = parse(data)
+  cache = {}
+  return len([1 for pattern in patterns if solutions(towels, pattern, cache) > 0])
+
 def part2(data):
   towels, patterns = parse(data)
   cache = {}
@@ -36,5 +42,7 @@ def part2(data):
   return sum([solutions(towels, pattern, cache) for pattern in patterns])
 
 
+print(part1(TEST_DATA))
+print(part1(REAL_DATA))
 print(part2(TEST_DATA))
 print(part2(REAL_DATA))
