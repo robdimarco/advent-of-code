@@ -21,26 +21,6 @@ def parse(data)
   [towels, patterns]
 end
 
-def match?(towels, pattern)
-  to_check = Containers::PriorityQueue.new
-  checked = Set.new
-  towels.each {|towel| to_check.push([towel, pattern], [-pattern.size, towel.size]) if pattern.start_with?(towel)}
-  until to_check.empty?
-    towel, rem = to_check.pop
-    next if checked.include?([towel, rem])
-    checked.add([towel, rem])
-    if towel == rem
-      return true 
-    end
-    if rem.start_with?(towel)
-      towels.each do |t| 
-        to_check.push([t, rem[towel.size..-1]], [-1 * (rem.size - towel.size), t.size]) if rem.start_with?(towel + t)
-      end
-    end
-  end
-  false
-end
-
 def solutions(towels, pattern, cache)
   return cache[pattern] if cache[pattern]
   rv = 0
@@ -54,9 +34,14 @@ def solutions(towels, pattern, cache)
   cache[pattern] = rv
 end
 
+def match?(towels, pattern, cache)
+  solutions(towels, pattern, cache).positive?
+end
+
 def part1(data)
   towels, patterns = parse(data)
-  patterns.select { |pattern| match?(towels, pattern)}.size
+  cache = {}
+  patterns.select { |pattern| match?(towels, pattern, cache)}.size
 end
 
 def part2(data)
