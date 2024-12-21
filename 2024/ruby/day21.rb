@@ -45,7 +45,11 @@ def md(a, b)
   (a.real - b.real).abs + (a.imag + b.imag).real
 end
 
-@path_cache = {}
+@path_cache = {
+  # Hard code some efficient paths
+  [TOUCHPAD, 1+0i, 2i] => [[(1+0i), (1+1i), (1+2i), (0+2i)]], 
+  [TOUCHPAD, 2i, 1+0i] => [[(0+2i), (1+2i), (1+1i), (1+0i)]], 
+}
 def path(course, a, b)
   return @path_cache[[course, a, b]] if @path_cache.key?([course, a, b])
   checked = {}
@@ -76,25 +80,6 @@ def path_to_touchpad(path)
   end.join("")
 end
 
-@all_paths_cache = {}
-def all_paths(steps)
-  return steps if steps.size == 0
-  return @all_paths_cache[steps] if @all_paths_cache[steps]
-  rv = []
-  head = steps[0]
-  head.each do |n|
-    ap = all_paths(steps[1..-1])
-    if ap.size == 0
-      rv.push([n])
-    else
-      ap.each do |app|
-        rv.push([n] + app)
-      end
-    end
-  end
-  @all_paths_cache[steps] = rv
-end
-
 def numpad_path(line)
   find_path(line, NUMPAD, R_NUMPAD)
 end
@@ -102,15 +87,51 @@ end
 def touchpad_path(line)
   find_path(line, TOUCHPAD, R_TOUCHPAD)
 end
+Branch = Struct.new(:lines)
 
 @find_path_cache = {}
 def find_path(line, pad, rpad)
   return @find_path_cache[line] if @find_path_cache[line]
-  c = ("A" + line).chars
-  all_possible = (1...c.size).map do |n|
-    path(pad, rpad[c[n-1]], rpad[c[n]]).map {|n| path_to_touchpad(n)}
+  if line.is_a?(String)
+    c = ("A" + line).chars
+    rv = []
+    (1...c.size).map do |n|
+      paths = path(pad, rpad[c[n-1]], rpad[c[n]]).map {|n| path_to_touchpad(n) + "A"}
+      rv.push(paths[0]) if paths.size == 1
+      if paths.size > 1
+        h = Hash.new {|h,k| h[k] = []}
+        paths.each {|path| h[path.size].push(path)}
+        hmin = h.keys.min
+        paths = h[hmin]
+
+        h = Hash.new {|h,k| h[k] = []}
+        paths.each do |path| 
+          mcnt = 0
+          (1...path.size).each do |n|
+            mcnt += 1 if path.chars[n] == path.chars[n-1]
+          end
+          h[mcnt].push(path)
+        end
+        hmin = h.keys.max
+        paths = h[hmin]
+
+        rv.push(Branch.new(paths))
+      end
+    end
+    @find_path_cache[line] = rv
+  elsif line.is_a?(Branch)
+    Branch.new(line.lines.map {|l| find_path(l, pad, rpad)})
+  elsif line.is_a?(Array)
+    line.map {|l| find_path(l, pad, rpad)}.flatten
+  else
+    raise "Doh #{line}"
   end
-  @find_path_cache[line] = all_paths(all_possible).map {|n| n.join("A") + "A"}
+end
+def linesize(line)
+  return line.size if line.is_a?(String)
+  return line.lines.map {|l| linesize(l)}.min if line.is_a?(Branch)
+  return line.map {|l| linesize(l)}.sum if line.is_a?(Array)
+  raise "Doh #{line}"
 end
 
 def part1(data, iters = 2)
@@ -119,19 +140,15 @@ def part1(data, iters = 2)
     numpad_path(line.strip)
   end
   touchpad_lines = numpad_lines
-  iters.times do 
+  iters.times do |idx|
     touchpad_lines = touchpad_lines.map do |lines|
-      paths = lines.map do |line|
-        touchpad_path(line)
-      end.flatten
-
-      min = paths.map(&:size).min
-      rv = paths.select {|p| p.size == min}
-      rv
+      touchpad_path(lines)
     end
+    puts "#{idx}: #{touchpad_lines.map {|l| linesize(l)}.inspect}"
   end
+
   sizes = touchpad_lines.map do |paths|
-    paths.map(&:size).min
+    linesize(paths)
   end
   rv = 0
   sizes.each_with_index do |s, idx|
@@ -141,6 +158,7 @@ def part1(data, iters = 2)
 end
 
 puts part1(TEST_DATA)
-# puts part1(REAL_DATA)
-# puts part1(REAL_DATA, 25)
+puts part1(REAL_DATA)
+# binding.break
+puts part1(REAL_DATA, 26)
 
