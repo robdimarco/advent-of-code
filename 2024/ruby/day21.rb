@@ -45,7 +45,9 @@ def md(a, b)
   (a.real - b.real).abs + (a.imag + b.imag).real
 end
 
+@path_cache = {}
 def path(course, a, b)
+  return @path_cache[[course, a, b]] if @path_cache.key?([course, a, b])
   checked = {}
   paths = []
   to_check = Containers::PriorityQueue.new
@@ -64,7 +66,8 @@ def path(course, a, b)
       end
     end
   end
-  paths
+
+  @path_cache[[course, a, b]] ||= paths
 end
 
 def path_to_touchpad(path)
@@ -73,14 +76,10 @@ def path_to_touchpad(path)
   end.join("")
 end
 
-# [["<"], ["^"], ["^^>", "^>^", ">^^"], ["vvv"]]
-# [] => []
-# [["vvv"], ["abc"]] => [["vvv"], ["abc"]]
-# [["^^>", "^>^", ">^^"], ["vvv", "abc"]] => [["^^>", "vvv"], ["^>^", "vvv"], [">^^", "vvv"]]
-# [[">"], ["^^>", "^>^", ">^^"], ["vvv"]] => [[">", "^^>", "vvv"], [">", "^>^", "vvv"], [">", ">^^", "vvv"]]
-
+@all_paths_cache = {}
 def all_paths(steps)
   return steps if steps.size == 0
+  return @all_paths_cache[steps] if @all_paths_cache[steps]
   rv = []
   head = steps[0]
   head.each do |n|
@@ -93,46 +92,47 @@ def all_paths(steps)
       end
     end
   end
-  rv
+  @all_paths_cache[steps] = rv
 end
 
-def part1(data)
+@numpad_path = {}
+def numpad_path(line)
+  return @numpad_path[line] if @numpad_path[line]
+  c = ("A" + line.strip).chars
+  all_possible = (1...c.size).map do |n|
+    path(NUMPAD, R_NUMPAD[c[n-1]], R_NUMPAD[c[n]]).map {|n| path_to_touchpad(n)}
+  end
+  @numpad_path[line] = all_paths(all_possible).map {|n| n.join("A") + "A"}
+end
+
+@touchpad_path = {}
+def touchpad_path(line)
+  return @touchpad_path[line] if @touchpad_path[line]
+  c = ("A" + line).chars
+  all_possible = (1...c.size).map do |n|
+    path(TOUCHPAD, R_TOUCHPAD[c[n-1]], R_TOUCHPAD[c[n]]).map {|n| path_to_touchpad(n)}
+  end
+  @touchpad_path[line] = all_paths(all_possible).map {|n| n.join("A") + "A"}
+end
+
+def part1(data, iters = 2)
   data_lines = data.lines
   numpad_lines = data_lines.map do |line|
-    c = ("A" + line.strip).chars
-    all_possible = (1...c.size).map do |n|
-      path(NUMPAD, R_NUMPAD[c[n-1]], R_NUMPAD[c[n]]).map {|n| path_to_touchpad(n)}
+    numpad_path(line)
+  end
+  touchpad_lines = numpad_lines
+  iters.times do 
+    touchpad_lines = touchpad_lines.map do |lines|
+      paths = lines.map do |line|
+        touchpad_path(line)
+      end.flatten
+
+      min = paths.map(&:size).min
+      rv = paths.select {|p| p.size == min}
+      rv
     end
-    aa = all_paths(all_possible).map {|n| n.join("A") + "A"}
-    aa
   end
-  # puts "#{numpad_lines}"
-  touchpad_lines = numpad_lines.map do |lines|
-    paths = lines.map do |line|
-      c = ("A" + line).chars
-      # puts c.inspect
-      all_possible = (1...c.size).map do |n|
-        path(TOUCHPAD, R_TOUCHPAD[c[n-1]], R_TOUCHPAD[c[n]]).map {|n| path_to_touchpad(n)}
-      end
-      aa = all_paths(all_possible).map {|n| n.join("A") + "A"}
-      aa
-    end.flatten
-    # puts paths.inspect
-    min = paths.map(&:size).min
-    paths.select {|p| p.size == min}
-  end
-  # puts touchpad_lines.inspect
-  sizes = touchpad_lines.map do |lines|
-    paths = lines.map do |line|
-      c = ("A" + line).chars
-      # puts c.inspect
-      all_possible = (1...c.size).map do |n|
-        path(TOUCHPAD, R_TOUCHPAD[c[n-1]], R_TOUCHPAD[c[n]]).map {|n| path_to_touchpad(n)}
-      end
-      aa = all_paths(all_possible).map {|n| n.join("A") + "A"}
-      aa
-    end.flatten
-    # puts paths.inspect
+  sizes = touchpad_lines.map do |paths|
     paths.map(&:size).min
   end
   rv = 0
@@ -140,17 +140,9 @@ def part1(data)
     rv += s * data_lines[idx].scan(/\d/).join.to_i
   end
   rv
-  # puts touchpad_lines
-  # touchpad_lines = touchpad_lines.map do |line|
-  #   c = ("A" + line).chars
-  #   (1...c.size).map do |n|
-  #     path_to_touchpad(path(TOUCHPAD, R_TOUCHPAD[c[n-1]], R_TOUCHPAD[c[n]]))
-  #   end.join("A") + "A"
-  # end
-  # touchpad_lines.map(&:size)
 end
+
 puts part1(TEST_DATA)
 puts part1(REAL_DATA)
+puts part1(REAL_DATA, 25)
 
-def part2(data)
-end
