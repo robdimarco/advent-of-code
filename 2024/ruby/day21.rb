@@ -7,7 +7,7 @@ TEST_DATA = <<~DATA
 DATA
 REAL_DATA = File.read(File.basename(__FILE__, ".rb") + ".txt")
 require 'algorithms'
-
+require 'debug'
 NUMPAD = {
   0 + 0i => "7",
   1i => "8",
@@ -95,30 +95,28 @@ def all_paths(steps)
   @all_paths_cache[steps] = rv
 end
 
-@numpad_path = {}
 def numpad_path(line)
-  return @numpad_path[line] if @numpad_path[line]
-  c = ("A" + line.strip).chars
-  all_possible = (1...c.size).map do |n|
-    path(NUMPAD, R_NUMPAD[c[n-1]], R_NUMPAD[c[n]]).map {|n| path_to_touchpad(n)}
-  end
-  @numpad_path[line] = all_paths(all_possible).map {|n| n.join("A") + "A"}
+  find_path(line, NUMPAD, R_NUMPAD)
 end
 
-@touchpad_path = {}
 def touchpad_path(line)
-  return @touchpad_path[line] if @touchpad_path[line]
+  find_path(line, TOUCHPAD, R_TOUCHPAD)
+end
+
+@find_path_cache = {}
+def find_path(line, pad, rpad)
+  return @find_path_cache[line] if @find_path_cache[line]
   c = ("A" + line).chars
   all_possible = (1...c.size).map do |n|
-    path(TOUCHPAD, R_TOUCHPAD[c[n-1]], R_TOUCHPAD[c[n]]).map {|n| path_to_touchpad(n)}
+    path(pad, rpad[c[n-1]], rpad[c[n]]).map {|n| path_to_touchpad(n)}
   end
-  @touchpad_path[line] = all_paths(all_possible).map {|n| n.join("A") + "A"}
+  @find_path_cache[line] = all_paths(all_possible).map {|n| n.join("A") + "A"}
 end
 
 def part1(data, iters = 2)
   data_lines = data.lines
   numpad_lines = data_lines.map do |line|
-    numpad_path(line)
+    numpad_path(line.strip)
   end
   touchpad_lines = numpad_lines
   iters.times do 
@@ -143,6 +141,6 @@ def part1(data, iters = 2)
 end
 
 puts part1(TEST_DATA)
-puts part1(REAL_DATA)
-puts part1(REAL_DATA, 25)
+# puts part1(REAL_DATA)
+# puts part1(REAL_DATA, 25)
 
