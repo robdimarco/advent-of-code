@@ -39,24 +39,19 @@ TOUCHPAD_TO_DIR = {
   ">" => 1i,
 }
 DIR_TO_TOUCHPAD = TOUCHPAD_TO_DIR.invert
-DIRS = [1, -1, 1i, -1i]
-
-def md(a, b)
-  (a.real - b.real).abs + (a.imag + b.imag).real
-end
 
 @path_cache = {}
 def path(course, a, b)
-  return @path_cache[[course, a, b]] if @path_cache.key?([course, a, b])
+  return @path_cache[[a, b]] if @path_cache.key?([a, b]) && course == TOUCHPAD
   d_col = a.imag - b.imag == 0 ? 0 : (b.imag - a.imag) / (a.imag - b.imag).abs
   d_row = a.real - b.real == 0 ? 0 : (b.real - a.real) / (a.real - b.real).abs
   path = [a]
   pos = a
-  strategy = :left_vert_left
+  strategy = :left_vert_right
   strategy = :vert_horiz if b.imag == 0 && !course[Complex(a.real, 0)]
   strategy = :horiz_vert if d_row != 0 && a.imag == 0 && !course[Complex(b.real, 0)]
 
-  if strategy == :left_vert_left
+  if strategy == :left_vert_right
     # If left, do it
     if d_col < 0
       until pos.imag == b.imag do
@@ -102,7 +97,9 @@ def path(course, a, b)
       path.push(pos)
     end
   end
-  @path_cache[[course, a, b]] = path
+  path.each {|p| raise "Doh... invalid #{pos}" unless course[p]}
+  @path_cache[[a, b]] = path if  course == TOUCHPAD
+  path
 end
 
 def path_to_touchpad(path)
@@ -112,58 +109,47 @@ def path_to_touchpad(path)
 end
 
 def numpad_path(line)
-  find_path(line, NUMPAD, R_NUMPAD)
-end
+  pad = NUMPAD
+  rpad = R_NUMPAD
 
-def touchpad_path(line)
-  find_path(line, TOUCHPAD, R_TOUCHPAD)
-end
-
-@find_path_cache = {}
-def find_path(line, pad, rpad)
-  return @find_path_cache[line] if @find_path_cache[line]
-  if line.is_a?(String)
-    # puts "checking line #{line.size}"
-    c = ("A" + line).chars
-    rv = []
-    (1...c.size).map do |n|
-      npath = path_to_touchpad(path(pad, rpad[c[n-1]], rpad[c[n]]))+ "A"
-      rv.push(npath)
-    end
-    # puts "done checking line"
-    @find_path_cache[line] = rv
-  elsif line.is_a?(Array)
-    # puts "checking #{line.size}"
-    rv = line.map {|l| find_path(l.is_a?(Array) ? l.join : l, pad, rpad)}
-    # binding.break
-    @find_path_cache[line] ||= rv.flatten
-  else
-    raise "Doh #{line}"
+  c = ("A" + line).chars
+  rv = []
+  (1...c.size).map do |n|
+    npath = path_to_touchpad(path(pad, rpad[c[n-1]], rpad[c[n]]))+ "A"
+    rv.push(npath)
   end
+  rv
 end
-def linesize(line)
-  return line.size if line.is_a?(String)
-  return line.map {|l| linesize(l)}.sum if line.is_a?(Array)
-  raise "Doh #{line}"
+
+@size_at_level_cache = {}
+def size_at_level(line, level)
+  if level == 0
+    return line.size 
+  end
+
+  cache_key = [line, level]
+  return @size_at_level_cache[cache_key] if @size_at_level_cache.key?(cache_key)
+
+  chars = ("A"+line).chars
+  steps = (1...chars.size).map do |n|
+    [chars[n-1], chars[n]]
+  end
+  next_level_steps = steps.map do |(a, b)|
+    path_to_touchpad(path(TOUCHPAD, R_TOUCHPAD[a], R_TOUCHPAD[b])) + "A"
+  end
+  rv = next_level_steps.map do |step|
+    size_at_level(step, level - 1)
+  end.sum
+
+  @size_at_level_cache[cache_key] = rv
 end
 
 def part1(data, iters = 2)
   data_lines = data.lines
   numpad_lines = data_lines.map do |line|
-    numpad_path(line.strip)
+    numpad_path(line.strip).join
   end
-
-  touchpad_lines = numpad_lines
-  iters.times do |idx|
-    touchpad_lines = touchpad_lines.map do |lines|
-      touchpad_path(lines)
-    end
-    puts "#{idx}: #{touchpad_lines.map {|l| linesize(l)}.inspect} #{@find_path_cache.size}"
-  end
-
-  sizes = touchpad_lines.map do |paths|
-    linesize(paths)
-  end
+  sizes = numpad_lines.map {|l| size_at_level(l, iters)}
   rv = 0
   sizes.each_with_index do |s, idx|
     rv += s * data_lines[idx].scan(/\d/).join.to_i
@@ -173,7 +159,5 @@ end
 
 puts part1(TEST_DATA)
 puts part1(REAL_DATA)
-# binding.break
-# puts part1(REAL_DATA, 26)
-puts part1("0", 26)
+puts part1(REAL_DATA, 25)
 
