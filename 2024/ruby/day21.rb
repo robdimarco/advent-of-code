@@ -45,36 +45,64 @@ def md(a, b)
   (a.real - b.real).abs + (a.imag + b.imag).real
 end
 
-@path_cache = {
-  # Hard code some efficient paths
-  [TOUCHPAD, 1+0i, 2i] => [[(1+0i), (1+1i), (1+2i), (0+2i)]], 
-  [TOUCHPAD, 2i, 1+0i] => [[(0+2i), (1+2i), (1+1i), (1+0i)]], 
-  [TOUCHPAD, 2i, 1+1i] => [[(0+2i), (0+1i), (1+1i)]], 
-  [TOUCHPAD, 1+2i, 0+1i] => [[(1+2i), (1+1i), (0+1i)]], 
-  [TOUCHPAD, 1+1i, 2i] => [[(1+1i), (0+1i), (0+2i)]], 
-}
+@path_cache = {}
 def path(course, a, b)
   return @path_cache[[course, a, b]] if @path_cache.key?([course, a, b])
-  checked = {}
-  paths = []
-  to_check = Containers::PriorityQueue.new
-  to_check.push([a, [a]], -1 * md(a, b))
-  until to_check.empty? do
-    pos, path = to_check.pop
-    next unless course.include?(pos)
-    next if checked[pos] && checked[pos] < path.size
-    checked[pos] = path.size
-    if pos == b
-      paths.push(path)
-    else
-      DIRS.each do |dir|
-        npos = pos + dir
-        to_check.push([npos, path + [npos]], -1 * md(npos, b))
+  d_col = a.imag - b.imag == 0 ? 0 : (b.imag - a.imag) / (a.imag - b.imag).abs
+  d_row = a.real - b.real == 0 ? 0 : (b.real - a.real) / (a.real - b.real).abs
+  path = [a]
+  pos = a
+  strategy = :left_vert_left
+  strategy = :vert_horiz if b.imag == 0 && !course[Complex(a.real, 0)]
+  strategy = :horiz_vert if d_row != 0 && a.imag == 0 && !course[Complex(b.real, 0)]
+
+  if strategy == :left_vert_left
+    # If left, do it
+    if d_col < 0
+      until pos.imag == b.imag do
+        pos += Complex(0, d_col)
+        path.push(pos)
       end
     end
-  end
 
-  @path_cache[[course, a, b]] ||= paths
+    # Up / Down
+    until pos.real == b.real do
+      pos += Complex(d_row, 0)
+      path.push(pos)
+    end
+
+    # Move right
+    until pos.imag == b.imag do
+      pos += Complex(0, d_col)
+      path.push(pos)
+    end
+  elsif strategy == :vert_horiz
+
+    # Up / Down
+    until pos.real == b.real do
+      pos += Complex(d_row, 0)
+      path.push(pos)
+    end
+
+    # Move right
+    until pos.imag == b.imag do
+      pos += Complex(0, d_col)
+      path.push(pos)
+    end
+  elsif strategy == :horiz_vert
+
+    # Move horizontal
+    until pos.imag == b.imag do
+      pos += Complex(0, d_col)
+      path.push(pos)
+    end
+
+    until pos.real == b.real do
+      pos += Complex(d_row, 0)
+      path.push(pos)
+    end
+  end
+  @path_cache[[course, a, b]] = path
 end
 
 def path_to_touchpad(path)
@@ -90,52 +118,31 @@ end
 def touchpad_path(line)
   find_path(line, TOUCHPAD, R_TOUCHPAD)
 end
-Branch = Struct.new(:lines)
 
 @find_path_cache = {}
 def find_path(line, pad, rpad)
   return @find_path_cache[line] if @find_path_cache[line]
   if line.is_a?(String)
-    print 's'
+    # puts "checking line #{line.size}"
     c = ("A" + line).chars
     rv = []
     (1...c.size).map do |n|
-      paths = path(pad, rpad[c[n-1]], rpad[c[n]]).map {|n| path_to_touchpad(n) + "A"}
-      rv.push(paths[0]) if paths.size == 1
-      if paths.size > 1
-        h = Hash.new {|h,k| h[k] = []}
-        paths.each {|path| h[path.size].push(path)}
-        hmin = h.keys.min
-        paths = h[hmin]
-
-        h = Hash.new {|h,k| h[k] = []}
-        paths.each do |path| 
-          mcnt = 0
-          (1...path.size).each do |n|
-            mcnt += 1 if path.chars[n] == path.chars[n-1]
-          end
-          h[mcnt].push(path)
-        end
-        hmin = h.keys.max
-        paths = h[hmin]
-
-        rv.push(Branch.new(paths))
-      end
+      npath = path_to_touchpad(path(pad, rpad[c[n-1]], rpad[c[n]]))+ "A"
+      rv.push(npath)
     end
+    # puts "done checking line"
     @find_path_cache[line] = rv
-  elsif line.is_a?(Branch)
-    print 'b'
-    @find_path_cache[line] ||= Branch.new(line.lines.map {|l| find_path(l, pad, rpad)})
   elsif line.is_a?(Array)
-    print 'a'
-    @find_path_cache[line] ||= line.map {|l| find_path(l, pad, rpad)}.flatten
+    # puts "checking #{line.size}"
+    rv = line.map {|l| find_path(l.is_a?(Array) ? l.join : l, pad, rpad)}
+    # binding.break
+    @find_path_cache[line] ||= rv.flatten
   else
     raise "Doh #{line}"
   end
 end
 def linesize(line)
   return line.size if line.is_a?(String)
-  return line.lines.map {|l| linesize(l)}.min if line.is_a?(Branch)
   return line.map {|l| linesize(l)}.sum if line.is_a?(Array)
   raise "Doh #{line}"
 end
@@ -145,6 +152,7 @@ def part1(data, iters = 2)
   numpad_lines = data_lines.map do |line|
     numpad_path(line.strip)
   end
+
   touchpad_lines = numpad_lines
   iters.times do |idx|
     touchpad_lines = touchpad_lines.map do |lines|
@@ -166,5 +174,6 @@ end
 puts part1(TEST_DATA)
 puts part1(REAL_DATA)
 # binding.break
-puts part1(REAL_DATA, 26)
+# puts part1(REAL_DATA, 26)
+puts part1("0", 26)
 
