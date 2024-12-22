@@ -49,6 +49,9 @@ end
   # Hard code some efficient paths
   [TOUCHPAD, 1+0i, 2i] => [[(1+0i), (1+1i), (1+2i), (0+2i)]], 
   [TOUCHPAD, 2i, 1+0i] => [[(0+2i), (1+2i), (1+1i), (1+0i)]], 
+  [TOUCHPAD, 2i, 1+1i] => [[(0+2i), (0+1i), (1+1i)]], 
+  [TOUCHPAD, 1+2i, 0+1i] => [[(1+2i), (1+1i), (0+1i)]], 
+  [TOUCHPAD, 1+1i, 2i] => [[(1+1i), (0+1i), (0+2i)]], 
 }
 def path(course, a, b)
   return @path_cache[[course, a, b]] if @path_cache.key?([course, a, b])
@@ -93,6 +96,7 @@ Branch = Struct.new(:lines)
 def find_path(line, pad, rpad)
   return @find_path_cache[line] if @find_path_cache[line]
   if line.is_a?(String)
+    print 's'
     c = ("A" + line).chars
     rv = []
     (1...c.size).map do |n|
@@ -120,9 +124,11 @@ def find_path(line, pad, rpad)
     end
     @find_path_cache[line] = rv
   elsif line.is_a?(Branch)
-    Branch.new(line.lines.map {|l| find_path(l, pad, rpad)})
+    print 'b'
+    @find_path_cache[line] ||= Branch.new(line.lines.map {|l| find_path(l, pad, rpad)})
   elsif line.is_a?(Array)
-    line.map {|l| find_path(l, pad, rpad)}.flatten
+    print 'a'
+    @find_path_cache[line] ||= line.map {|l| find_path(l, pad, rpad)}.flatten
   else
     raise "Doh #{line}"
   end
@@ -144,7 +150,7 @@ def part1(data, iters = 2)
     touchpad_lines = touchpad_lines.map do |lines|
       touchpad_path(lines)
     end
-    puts "#{idx}: #{touchpad_lines.map {|l| linesize(l)}.inspect}"
+    puts "#{idx}: #{touchpad_lines.map {|l| linesize(l)}.inspect} #{@find_path_cache.size}"
   end
 
   sizes = touchpad_lines.map do |paths|
