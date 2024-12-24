@@ -84,8 +84,7 @@ def execute(values, operation)
   true
 end
 
-def part1(data)
-  values, operations = parse(data)
+def run(values, operations)
   while operations.any? do
     o = operations.shift
     unless execute(values, o)
@@ -95,10 +94,65 @@ def part1(data)
   values.keys.select {|k| k.start_with?("z")}.sort.reverse.map {|k| values[k]}.join.to_i(2)
 end
 
+def part1(data)
+  values, operations = parse(data)
+  run(values, operations)
+end
+
+def diffs(result, expected)
+  problem_keys = []
+  (0...result.size).each do |i|
+    if result[i] != expected[i]
+      n = result.size - i  - 1
+      problem_keys.push("z#{n < 10 ? 0 : ""}#{n}")
+    end
+  end
+  problem_keys
+end
 
 def part2(data)
+  orig_values, orig_operations = parse(data)
+  xs = orig_values.keys.select {|k| k.start_with?("x")}.sort.reverse.map{|k| orig_values[k]}.join
+  ys = orig_values.keys.select {|k| k.start_with?("y")}.sort.reverse.map{|k| orig_values[k]}.join
+  x = xs.to_i(2)
+  y = ys.to_i(2)
+  expected = (x+y).to_s(2)
+  result = run(orig_values.dup, orig_operations.dup).to_s(2)
+  puts "Expected:  #{expected}"
+  puts "Result:   #{result}"
+  data2 = data
+  data2 = data.sub("y08 AND x08 -> z08", "y08 AND x08 -> cdj")
+  data2 = data2.sub("dnc XOR rtp -> cdj", "dnc XOR rtp -> z08")
+  data2 = data2.sub("btj AND tmm -> z16", "btj AND tmm -> mrb")
+  data2 = data2.sub("btj XOR tmm -> mrb", "btj XOR tmm -> z16")
+  data2 = data2.sub("jbc OR mnv -> z32", "jbc OR mnv -> gfm")
+  data2 = data2.sub("kcv XOR pqv -> gfm", "kcv XOR pqv -> z32")
+  data2 = data2.sub("x38 AND y38 -> qjd", "x38 AND y38 -> dhm")
+  data2 = data2.sub("x38 XOR y38 -> dhm", "x38 XOR y38 -> qjd")
+
+  # Used this to plot to GraphViz and look for oddities where the numbers diverged
+  values, operations = parse(data2)
+  operations.each do |o|
+    puts "#{o[:a]} -> #{o[:target]} [label=\" #{o[:op]}\"]"
+    puts "#{o[:b]} -> #{o[:target]} [label=\" #{o[:op]}\"]"
+  end
+  result = run(values.dup, operations).to_s(2)
+  puts "Expected2: #{expected}"
+  puts "Result2:   #{result}"
 end
-puts part1(TEST_DATA)
-puts part1(REAL_DATA)
-puts part2(TEST_DATA)
 puts part2(REAL_DATA)
+
+# 4     3         2         1         0
+# 5432109876543210987654321098765432109876543210
+# 1100011101111101101111100100101110001011001110
+# 1100100001111101101111100100101110001011001110
+
+# 
+#
+# ...
+
+# y08 AND x08 -> z08  swap with dnc XOR rtp -> cdj 
+
+# btj AND tmm -> z16  swap with btj XOR tmm -> mrb
+# jbc OR mnv -> z32 swap with kcv XOR pqv -> gfm
+# jdh OR qrw -> z45
