@@ -33,25 +33,22 @@ def part2(data)
     dir, *amt = line.chars
     amt = amt.join.to_i
     cnt += amt / 100
-    # puts ("Adding #{amt / 100} for line #{line}")
     amt = amt % 100
     amt *= -1 if dir == 'L'
 
     pos_n = pos + amt
     if pos != 0 && (pos_n <= 0 || pos_n >= 100)
       cnt += 1 
-      # puts "Adding 1 to count for line #{line}"
     end
     pos = pos_n % 100
-    # cnt +=1 if pos == 0
   end
   cnt
 end
 
-# puts part1(TEST_DATA)
-# puts part1(REAL_DATA) 
+puts "Part 1"
+puts part1(TEST_DATA)
+puts part1(REAL_DATA) 
 
+puts "Part 2"
 puts part2(TEST_DATA)
 puts part2(REAL_DATA) 
-# puts part2(["R1000"])
-# puts part2(["L1000"])
