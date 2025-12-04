@@ -35,6 +35,25 @@ def part1(data)
 end
 
 def part2(data)
+  r = parse(data)
+  count = 0
+  loop do
+    cnt = 0
+    r.each do |k,v|
+      next if v != '@'
+      adjacent = [Complex(1,0), Complex(-1,0), Complex(1,1), Complex(1,-1),Complex(-1,1), Complex(-1,-1), Complex(0,1), Complex(0,-1)].map { |d| r[k + d] }
+      if adjacent.count { |c| c == '@' } < 4
+        cnt += 1
+        r.delete(k)
+      end
+    end
+    if cnt == 0
+      break
+    else
+      count += cnt
+    end
+  end
+  count
 end
 
 puts "Part 1"
