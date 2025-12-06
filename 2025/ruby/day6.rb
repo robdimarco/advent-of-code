@@ -22,6 +22,29 @@ def parse(data)
   [vals, operations]
 end
 
+def parse2(data)
+  lines = data.lines.map(&:chomp)
+  pos_to_char = {}
+  lines[0..-2].each_with_index do |line|
+    line.chars.each_with_index do |char, idx|
+      pos_to_char[idx] ||= ""
+      pos_to_char[idx] << char
+    end
+  end
+  vals = [[]]
+  pos_to_char.keys.reverse.each do |idx|
+    v = pos_to_char[idx]
+    if v.strip.empty?
+      vals.push([])
+    else
+      vals.last.push(v.to_i)
+    end    
+  end
+  operations = lines[-1].split.map(&:to_sym)
+
+  [vals.reverse, operations]
+end
+
 def part1(data)
   vals, ops = parse(data)
   sum = 0
@@ -32,6 +55,12 @@ def part1(data)
 end
 
 def part2(data)
+  vals, ops = parse2(data)
+  sum = 0
+  vals.each_with_index do |col, idx|
+    sum += col.reduce(ops[idx])
+  end
+  sum
 end
 
 puts "Part 1"
