@@ -29,33 +29,37 @@ def part1(data)
   grid.each_with_index do |row, r_idx|
     row.each_with_index do |cell, c_idx|
       if cell == "S"
-        grid[r_idx + 1][c_idx] = "|"
+        grid[r_idx + 1][c_idx] = 1
       elsif cell == "^"
-        if grid[r_idx - 1][c_idx] == "|"
+        prev = grid[r_idx - 1][c_idx].to_i
+        if prev > 0
           if c_idx > 0
-            grid[r_idx][c_idx - 1] = "|"
+            if grid[r_idx][c_idx - 1].to_i > 0
+              grid[r_idx][c_idx - 1] += prev
+            else
+              grid[r_idx][c_idx - 1] = prev 
+            end
           end
           if c_idx < row.length - 1
-            grid[r_idx][c_idx + 1] = "|"
+            if grid[r_idx][c_idx + 1].to_i > 0
+              grid[r_idx][c_idx + 1] += prev
+            else
+              grid[r_idx][c_idx + 1] = prev 
+            end
           end
           cnt += 1
         end
-      elsif r_idx > 0 && grid[r_idx - 1][c_idx] == "|"
-        grid[r_idx][c_idx] = "|"
+      elsif r_idx > 0 && grid[r_idx - 1][c_idx].to_i > 0
+        grid[r_idx][c_idx] = grid[r_idx][c_idx].to_i + grid[r_idx - 1][c_idx]
       end
     end
   end
   # puts grid.map(&:join).join("\n")
-  cnt
+  [cnt, grid[-1].map(&:to_i).sum].join(",")
 end
 
-def part2(data)
-end
 
-puts "Part 1"
+puts "Part 1,2"
 puts part1(TEST_DATA)
 puts part1(REAL_DATA) 
 
-puts "Part 2"
-puts part2(TEST_DATA)
-puts part2(REAL_DATA) 
