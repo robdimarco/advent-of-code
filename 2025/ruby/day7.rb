@@ -49,8 +49,8 @@ def part1(data)
           end
           cnt += 1
         end
-      elsif r_idx > 0 && grid[r_idx - 1][c_idx].to_i > 0
-        grid[r_idx][c_idx] = grid[r_idx][c_idx].to_i + grid[r_idx - 1][c_idx]
+      elsif r_idx > 0 && prev > 0
+        grid[r_idx][c_idx] = grid[r_idx][c_idx].to_i + prev
       end
     end
   end
