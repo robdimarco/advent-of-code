@@ -58,11 +58,31 @@ def part1(data, n=10)
 end
 
 def part2(data)
+  points = parse(data)
+  circuits = Hash.new {|h, k| h[k] = [k] }
+  distances = []
+  points.each_with_index do |p, idx|
+    points[idx+1..-1].each do |o|
+      distances.push([p, o, p.distance(o)])
+    end
+  end
+  distances.sort_by!{|a| a[2]}
+
+  distances.each do |p, o, d|
+    circuit = (circuits[p] + circuits[o]).uniq.sort_by{|pt| [pt.x, pt.y, pt.z]}
+    circuit.each do |point|
+      circuits[point] = circuit
+    end
+    return [p.x, o.x, p.x * o.x].join(",") if circuit.size == points.size
+  end
+  # pp circuits
+
+  circuits.values.uniq.map(&:size).sort.last(3).inject(&:*)
 end
 
-puts "Part 1"
-puts part1(TEST_DATA, 10)
-puts part1(REAL_DATA, 1000) 
+# puts "Part 1"
+# puts part1(TEST_DATA, 10)
+# puts part1(REAL_DATA, 1000) 
 
 puts "Part 2"
 puts part2(TEST_DATA)
